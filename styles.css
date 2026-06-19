@@ -2220,3 +2220,43 @@ svg { width: 1em; height: 1em; display: block; stroke-width: 2 }
   .ai-input-bar { grid-template-columns:1fr auto; padding:12px }
   .weather-main { padding:22px }
 }
+
+
+/* ---------- TOASTS (mejora) ---------- */
+.tl-toasts{position:fixed;top:18px;right:18px;z-index:200;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.tl-toast{display:flex;align-items:center;gap:11px;min-width:260px;max-width:340px;background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow-lg);transform:translateX(120%);opacity:0;transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .28s;pointer-events:auto}
+.tl-toast.show{transform:none;opacity:1}
+.tl-toast-ic{width:34px;height:34px;border-radius:10px;background:rgba(34,197,94,.12);color:var(--success);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tl-toast.danger .tl-toast-ic{background:rgba(239,68,68,.12);color:var(--danger)}
+.tl-toast.gold .tl-toast-ic{background:rgba(217,119,6,.14);color:var(--warning)}
+.tl-toast-body{display:flex;flex-direction:column}
+.tl-toast-body strong{font-size:13px;font-weight:800}
+.tl-toast-body span{font-size:12px;color:var(--muted)}
+
+/* ---------- MODAL (mejora) ---------- */
+.tl-modal-overlay{position:fixed;inset:0;z-index:210;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .2s}
+.tl-modal-overlay.show{opacity:1}
+.tl-modal{width:100%;max-width:420px;background:#fff;border-radius:var(--rxl);box-shadow:var(--shadow-lg);transform:translateY(14px) scale(.98);transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+.tl-modal-overlay.show .tl-modal{transform:none}
+.tl-modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border)}
+.tl-modal-head h3{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:800}
+.tl-modal-head h3 i[data-lucide]{color:var(--secondary)}
+.tl-modal-x{width:32px;height:32px;border-radius:9px;border:1px solid var(--border);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.tl-modal-body{padding:20px;display:flex;flex-direction:column;gap:14px}
+.tl-field{display:flex;flex-direction:column;gap:6px}
+.tl-field>span{font-size:12px;font-weight:700;color:var(--muted)}
+.tl-modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px}
+
+/* ---------- NOTIF PANEL (mejora) ---------- */
+.tl-notif{position:fixed;z-index:205;width:320px;background:#fff;border:1px solid var(--border);border-radius:var(--rl);box-shadow:var(--shadow-lg);padding:12px;opacity:0;transform:translateY(-8px);pointer-events:none;transition:all .2s}
+.tl-notif.show{opacity:1;transform:none;pointer-events:auto}
+.tl-notif-head{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 12px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.tl-notif-head strong{font-size:14px;font-weight:800}
+.tl-notif-item{display:flex;gap:11px;width:100%;text-align:left;background:none;border:none;cursor:pointer;padding:10px 8px;border-radius:11px;transition:background var(--t);font-family:var(--font)}
+.tl-notif-item:hover{background:var(--bg)}
+.tl-notif-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--bg);color:var(--muted)}
+.tl-notif-ic.orange{background:rgba(245,158,11,.14);color:var(--warning)}
+.tl-notif-ic.blue{background:rgba(29,78,216,.1);color:var(--secondary)}
+.tl-notif-item strong{display:block;font-size:13px;font-weight:700}
+.tl-notif-item span{font-size:12px;color:var(--muted)}
+

@@ -562,3 +562,302 @@ function boot() {
 }
 
 document.addEventListener("DOMContentLoaded", boot);
+
+
+/* ============================================================
+   TRAVELIFE 2026 — Capa de mejoras (añadida sin tocar el HTML
+   base). Conecta los botones que no tenian accion: navegacion
+   a secciones, toasts, modales de "Agregar evento" y "Nuevo
+   gasto", panel de notificaciones, interaccion del mapa, etc.
+   ============================================================ */
+(function () {
+  "use strict";
+
+  /* ---- Toast / notificaciones ---- */
+  function ensureToastHost() {
+    let host = $("#tlToasts");
+    if (!host) {
+      host = document.createElement("div");
+      host.id = "tlToasts";
+      host.className = "tl-toasts";
+      document.body.appendChild(host);
+    }
+    return host;
+  }
+
+  function notify(message, opts = {}) {
+    const host = ensureToastHost();
+    const el = document.createElement("div");
+    el.className = `tl-toast ${opts.tone || ""}`.trim();
+    el.innerHTML = `
+      <span class="tl-toast-ic"><i data-lucide="${opts.icon || "check-circle-2"}"></i></span>
+      <div class="tl-toast-body">
+        ${opts.title ? `<strong>${opts.title}</strong>` : ""}
+        <span>${message}</span>
+      </div>
+    `;
+    host.appendChild(el);
+    renderIcons();
+    requestAnimationFrame(() => el.classList.add("show"));
+    window.setTimeout(() => {
+      el.classList.remove("show");
+      window.setTimeout(() => el.remove(), 280);
+    }, opts.duration || 2600);
+  }
+
+  /* ---- Modal generico ---- */
+  let modalOpen = false;
+  function openModal({ title, icon, fields = [], submitText = "Guardar", onSubmit }) {
+    closeModal();
+    modalOpen = true;
+    const overlay = document.createElement("div");
+    overlay.className = "tl-modal-overlay";
+    overlay.id = "tlModal";
+    overlay.innerHTML = `
+      <div class="tl-modal" role="dialog" aria-modal="true">
+        <div class="tl-modal-head">
+          <h3><i data-lucide="${icon || "sparkles"}"></i>${title}</h3>
+          <button class="tl-modal-x" type="button" aria-label="Cerrar"><i data-lucide="x"></i></button>
+        </div>
+        <form class="tl-modal-body">
+          ${fields.map(f => f.type === "select"
+            ? `<label class="tl-field"><span>${f.label}</span>
+                 <select name="${f.name}" class="form-input">
+                   ${f.options.map(o => `<option>${o}</option>`).join("")}
+                 </select></label>`
+            : `<label class="tl-field"><span>${f.label}</span>
+                 <input name="${f.name}" class="form-input" type="${f.type || "text"}"
+                        placeholder="${f.placeholder || ""}" value="${f.value || ""}" ${f.required ? "required" : ""}></label>`
+          ).join("")}
+          <div class="tl-modal-actions">
+            <button type="button" class="btn btn-ghost tl-modal-cancel">Cancelar</button>
+            <button type="submit" class="btn btn-primary">${submitText}</button>
+          </div>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    renderIcons();
+    requestAnimationFrame(() => overlay.classList.add("show"));
+
+    const close = () => closeModal();
+    overlay.addEventListener("click", e => { if (e.target === overlay) close(); });
+    overlay.querySelector(".tl-modal-x").addEventListener("click", close);
+    overlay.querySelector(".tl-modal-cancel").addEventListener("click", close);
+    overlay.querySelector("form").addEventListener("submit", e => {
+      e.preventDefault();
+      const data = {};
+      fields.forEach(f => { data[f.name] = overlay.querySelector(`[name="${f.name}"]`).value.trim(); });
+      if (onSubmit) onSubmit(data);
+      close();
+    });
+    const firstInput = overlay.querySelector("input,select");
+    if (firstInput) firstInput.focus();
+  }
+
+  function closeModal() {
+    const overlay = $("#tlModal");
+    if (overlay) {
+      overlay.classList.remove("show");
+      window.setTimeout(() => overlay.remove(), 220);
+    }
+    modalOpen = false;
+  }
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") {
+      if (modalOpen) closeModal();
+      const np = $("#tlNotif");
+      if (np && np.classList.contains("show")) np.classList.remove("show");
+    }
+  });
+
+  /* ---- Acciones concretas ---- */
+  function addTripEvent(data) {
+    const stop = mock.itinerary[0];
+    stop.items.push({
+      icon: "calendar-plus",
+      title: data.title || "Nuevo evento",
+      meta: `${data.day || "Dia 1"} · ${data.time || "Sin hora"}`
+    });
+    renderTrip();
+    renderIcons();
+    notify(`"${data.title}" agregado a tu itinerario.`, { title: "Evento agregado", icon: "calendar-check" });
+  }
+
+  function addExpense(data) {
+    const amount = Math.abs(parseFloat(data.amount)) || 0;
+    const iconByCat = { Hotel: "hotel", Comida: "utensils", Transporte: "car", Tickets: "ticket", Otros: "circle-dollar-sign" };
+    mock.transactions.unshift({
+      icon: iconByCat[data.category] || "circle-dollar-sign",
+      name: data.name || "Gasto sin nombre",
+      meta: `${data.category || "Otros"} · hoy`,
+      amount: -amount
+    });
+    renderExpenses();
+    renderIcons();
+    notify(`Gasto de $${amount} registrado en ${data.category || "Otros"}.`, { title: "Gasto agregado", icon: "wallet-cards" });
+  }
+
+  /* ---- Panel de notificaciones (campana) ---- */
+  function toggleNotifPanel(anchor) {
+    let panel = $("#tlNotif");
+    if (panel && panel.classList.contains("show")) { panel.classList.remove("show"); return; }
+    if (!panel) {
+      panel = document.createElement("div");
+      panel.id = "tlNotif";
+      panel.className = "tl-notif";
+      panel.innerHTML = `
+        <div class="tl-notif-head"><strong>Alertas</strong><span class="badge badge-orange">2 nuevas</span></div>
+        <button class="tl-notif-item" type="button" data-go="safety">
+          <span class="tl-notif-ic orange"><i data-lucide="traffic-cone"></i></span>
+          <div><strong>Alta afluencia</strong><span>Zona estadio desde 16:00. Sal 40 min antes.</span></div>
+        </button>
+        <button class="tl-notif-item" type="button" data-go="weather">
+          <span class="tl-notif-ic blue"><i data-lucide="cloud-rain"></i></span>
+          <div><strong>Riesgo de lluvia 42%</strong><span>Revisa el Weather Center antes de salir.</span></div>
+        </button>
+        <button class="tl-notif-item" type="button" data-go="safety">
+          <span class="tl-notif-ic"><i data-lucide="badge-alert"></i></span>
+          <div><strong>Documentos</strong><span>Guarda copia offline de pasaporte y seguro.</span></div>
+        </button>
+      `;
+      document.body.appendChild(panel);
+      panel.addEventListener("click", e => {
+        const it = e.target.closest("[data-go]");
+        if (it) { navigate(it.dataset.go); panel.classList.remove("show"); }
+      });
+    }
+    const r = anchor.getBoundingClientRect();
+    panel.style.top = `${r.bottom + 10}px`;
+    panel.style.right = `${Math.max(16, window.innerWidth - r.right)}px`;
+    renderIcons();
+    requestAnimationFrame(() => panel.classList.add("show"));
+  }
+
+  document.addEventListener("click", e => {
+    const panel = $("#tlNotif");
+    if (panel && panel.classList.contains("show") && !e.target.closest("#tlNotif") && !e.target.closest(".topbar-notif")) {
+      panel.classList.remove("show");
+    }
+  });
+
+  /* ---- Wiring de los botones sin accion ---- */
+  function byText(root, selector, text) {
+    return $$(selector, root).find(el => el.textContent.trim().toLowerCase().includes(text.toLowerCase()));
+  }
+
+  function wire() {
+    // Campana de alertas
+    const notifBtn = $(".topbar-notif");
+    if (notifBtn) notifBtn.addEventListener("click", () => toggleNotifPanel(notifBtn));
+
+    // Cerrar sesion -> vuelve al landing
+    const logout = $(".sidebar-logout");
+    if (logout) logout.addEventListener("click", e => {
+      e.preventDefault();
+      navigate("landing");
+      notify("Sesion cerrada (demo).", { title: "Hasta pronto", icon: "log-out" });
+    });
+
+    // Mi Viaje -> Agregar evento (modal)
+    const addEventBtn = byText($("#screen-my-trip"), ".btn", "Agregar evento");
+    if (addEventBtn) addEventBtn.addEventListener("click", () => openModal({
+      title: "Agregar evento", icon: "calendar-plus", submitText: "Agregar al itinerario",
+      fields: [
+        { name: "title", label: "Titulo del evento", placeholder: "Ej. Visita museo", required: true },
+        { name: "day", label: "Dia", type: "select", options: ["Dia 1", "Dia 3", "Dia 6"] },
+        { name: "time", label: "Hora", type: "time", value: "12:00" }
+      ],
+      onSubmit: addTripEvent
+    }));
+
+    // Gastos -> Nuevo gasto (modal)
+    const addExpenseBtn = byText($("#screen-expenses"), ".btn", "Gasto");
+    if (addExpenseBtn) addExpenseBtn.addEventListener("click", () => openModal({
+      title: "Nuevo gasto", icon: "wallet-cards", submitText: "Registrar gasto",
+      fields: [
+        { name: "name", label: "Concepto", placeholder: "Ej. Cena restaurante", required: true },
+        { name: "amount", label: "Monto (USD)", type: "number", placeholder: "0", required: true },
+        { name: "category", label: "Categoria", type: "select", options: ["Hotel", "Comida", "Transporte", "Tickets", "Otros"] }
+      ],
+      onSubmit: addExpense
+    }));
+
+    // Safety -> Emergencia
+    const sos = byText($("#screen-safety"), ".btn", "Emergencia");
+    if (sos) sos.addEventListener("click", () => {
+      navigate("safety");
+      notify("Llamando a Emergencias 911 (demo). Tus contactos rapidos estan abajo.", { title: "Modo emergencia", icon: "phone-call", tone: "danger", duration: 3600 });
+    });
+
+    // Safety -> Subir documentos
+    const upload = byText($("#screen-safety"), ".btn", "Subir");
+    if (upload) upload.addEventListener("click", () => openModal({
+      title: "Subir documento", icon: "upload", submitText: "Guardar documento",
+      fields: [
+        { name: "name", label: "Nombre del documento", placeholder: "Ej. Visa, reserva hotel", required: true },
+        { name: "type", label: "Tipo", type: "select", options: ["Identidad", "Seguro", "Reserva", "Otro"] }
+      ],
+      onSubmit: d => notify(`"${d.name}" guardado en tus documentos.`, { title: "Documento subido", icon: "file-check" })
+    }));
+
+    // Premium -> Activar Premium (hero y CTA)
+    $$(".btn").filter(b => b.textContent.trim().toLowerCase().includes("activar premium")).forEach(btn => {
+      btn.addEventListener("click", () => {
+        navigate("premium");
+        notify("Premium activado en modo demo. Disfruta AI ilimitado y alertas proactivas.", { title: "TRAVELIFE Premium", icon: "crown", tone: "gold", duration: 3200 });
+      });
+    });
+
+    // Perfil -> Editar (lleva a Configuracion)
+    const edit = $(".profile-edit-btn");
+    if (edit) edit.addEventListener("click", () => navigate("settings"));
+
+    // Mapa: pins activos + zoom + ciudad
+    $$(".map-pin").forEach(pin => pin.addEventListener("click", () => {
+      $$(".map-pin").forEach(p => p.classList.remove("is-active"));
+      pin.classList.add("is-active");
+      const label = pin.querySelector(".map-pin-label")?.textContent || "Punto";
+      notify(`Centrando mapa en: ${label}.`, { title: "Mapa", icon: "map-pin", duration: 1800 });
+    }));
+
+    let zoom = 1;
+    const placeholder = $("#screen-map .map-placeholder");
+    const zoomBtns = $$("#screen-map .map-ctrl-btn");
+    if (zoomBtns[0]) zoomBtns[0].addEventListener("click", () => { zoom = Math.min(2, zoom + 0.15); if (placeholder) placeholder.style.transform = `scale(${zoom})`; });
+    if (zoomBtns[1]) zoomBtns[1].addEventListener("click", () => { zoom = Math.max(0.7, zoom - 0.15); if (placeholder) placeholder.style.transform = `scale(${zoom})`; });
+
+    const mapCity = $(".map-city-sel");
+    if (mapCity) mapCity.addEventListener("change", e => notify(`Mapa cambiado a ${e.target.value}.`, { title: "Ciudad", icon: "map", duration: 1600 }));
+
+    // Reservas y documentos: feedback al tocar
+    $$("#screen-my-trip .reservation-row").forEach(row => {
+      row.style.cursor = "pointer";
+      row.addEventListener("click", () => {
+        const name = row.querySelector("span")?.textContent || "Reserva";
+        notify(`Detalle de reserva: ${name}.`, { icon: "ticket", duration: 1800 });
+      });
+    });
+    $$("#screen-safety .doc-card").forEach(card => {
+      card.style.cursor = "pointer";
+      card.addEventListener("click", () => {
+        const name = card.querySelector("span")?.textContent || "Documento";
+        notify(`Abriendo: ${name}.`, { icon: "file-text", duration: 1600 });
+      });
+    });
+
+    // Configuracion: selects con feedback
+    $$("#screen-settings .settings-select").forEach(sel => {
+      sel.addEventListener("change", e => notify(`Preferencia actualizada: ${e.target.value}.`, { icon: "settings", duration: 1600 }));
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // corre despues de boot() para que los elementos ya existan
+    window.setTimeout(wire, 0);
+  });
+
+  // expuesto por si quieres usarlo desde consola
+  window.TL = { notify, openModal };
+})();
