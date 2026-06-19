@@ -527,10 +527,12 @@ function updateCountdown() {
   const days = Math.floor(distance / 86400000);
   const hours = Math.floor((distance % 86400000) / 3600000);
   const minutes = Math.floor((distance % 3600000) / 60000);
+  const seconds = Math.floor((distance % 60000) / 1000);
   const values = [
     ["dias", days],
     ["hrs", hours],
-    ["min", minutes]
+    ["min", minutes],
+    ["seg", seconds]
   ];
 
   $("#countdown").innerHTML = values.map(([label, value]) => `
@@ -554,7 +556,7 @@ function boot() {
   resetChat();
   bindInteractions();
   updateCountdown();
-  window.setInterval(updateCountdown, 60000);
+  window.setInterval(updateCountdown, 1000);
 
   const initial = window.location.hash.replace("#", "") || "landing";
   navigate(initial, false);
