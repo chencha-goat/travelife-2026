@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TRAVELIFE 2026</title>
+  <meta name="description" content="TRAVELIFE 2026 premium travel companion for match trips, safety, weather, budgets and AI planning.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <section id="app-section" aria-label="TRAVELIFE 2026">
+    <aside class="sidebar" id="sidebar">
+      <a class="sidebar-logo-wrap tl-logo" href="#landing" data-screen-target="landing" aria-label="TRAVELIFE Home">
+        <span class="tl-logo-icon-wrap" aria-hidden="true">
+          <img class="tl-logo-mark" src="assets/travelife-t-logo.png" alt="">
+        </span>
+        <span class="tl-logo-wordmark">TRAVELIFE</span>
+      </a>
+
+      <nav class="sidebar-nav" aria-label="Principal">
+        <div class="nav-section-label">Premium</div>
+        <a class="nav-item active" href="#landing" data-screen-target="landing">
+          <span class="nav-icon"><i data-lucide="sparkles"></i></span>
+          <span class="nav-label">Landing</span>
+          <span class="nav-badge">2026</span>
+        </a>
+        <a class="nav-item" href="#dashboard" data-screen-target="dashboard">
+          <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span>
+          <span class="nav-label">Inicio</span>
+        </a>
+        <a class="nav-item nav-premium" href="#ai" data-screen-target="ai">
+          <span class="nav-icon"><i data-lucide="bot"></i></span>
+          <span class="nav-label">Travel AI</span>
+          <span class="nav-badge">AI</span>
+        </a>
+
+        <div class="nav-section-label">Viaje</div>
+        <a class="nav-item" href="#my-trip" data-screen-target="my-trip">
+          <span class="nav-icon"><i data-lucide="route"></i></span>
+          <span class="nav-label">Mi Viaje</span>
+        </a>
+        <a class="nav-item" href="#matches" data-screen-target="matches">
+          <span class="nav-icon"><i data-lucide="ticket"></i></span>
+          <span class="nav-label">Partidos</span>
+        </a>
+        <a class="nav-item" href="#map" data-screen-target="map">
+          <span class="nav-icon"><i data-lucide="map"></i></span>
+          <span class="nav-label">Mapa</span>
+        </a>
+        <a class="nav-item" href="#expenses" data-screen-target="expenses">
+          <span class="nav-icon"><i data-lucide="wallet-cards"></i></span>
+          <span class="nav-label">Gastos</span>
+        </a>
+
+        <div class="nav-section-label">Centros</div>
+        <a class="nav-item" href="#safety" data-screen-target="safety">
+          <span class="nav-icon"><i data-lucide="shield-check"></i></span>
+          <span class="nav-label">Safety Center</span>
+        </a>
+        <a class="nav-item" href="#weather" data-screen-target="weather">
+          <span class="nav-icon"><i data-lucide="cloud-sun"></i></span>
+          <span class="nav-label">Weather Center</span>
+        </a>
+        <a class="nav-item" href="#recommendations" data-screen-target="recommendations">
+          <span class="nav-icon"><i data-lucide="utensils"></i></span>
+          <span class="nav-label">Recomendaciones</span>
+        </a>
+
+        <div class="nav-section-label">Cuenta</div>
+        <a class="nav-item nav-premium" href="#premium" data-screen-target="premium">
+          <span class="nav-icon"><i data-lucide="crown"></i></span>
+          <span class="nav-label">Premium</span>
+        </a>
+        <a class="nav-item" href="#profile" data-screen-target="profile">
+          <span class="nav-icon"><i data-lucide="user-round"></i></span>
+          <span class="nav-label">Perfil</span>
+        </a>
+        <a class="nav-item" href="#settings" data-screen-target="settings">
+          <span class="nav-icon"><i data-lucide="settings"></i></span>
+          <span class="nav-label">Configuracion</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" aria-hidden="true"><i data-lucide="badge-check"></i></div>
+        <div>
+          <div class="sidebar-uname">Alex Rivera</div>
+          <div class="sidebar-uplan">Travelife Premium</div>
+        </div>
+        <button class="sidebar-logout" type="button" aria-label="Salir">
+          <i data-lucide="log-out"></i>
+        </button>
+      </div>
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <main class="app-main">
+      <header class="topbar">
+        <button class="topbar-hamburger" id="menuBtn" type="button" aria-label="Abrir menu">
+          <i data-lucide="menu"></i>
+        </button>
+        <div class="topbar-title" id="topbarTitle">Landing Premium</div>
+        <div class="topbar-right">
+          <button class="topbar-notif" type="button" aria-label="Alertas">
+            <i data-lucide="bell"></i>
+            <span class="topbar-notif-dot"></span>
+          </button>
+          <button class="btn btn-primary btn-sm" type="button" data-screen-target="ai">
+            <i data-lucide="bot"></i>
+            Travel AI
+          </button>
+          <button class="topbar-user" type="button" aria-label="Perfil">
+            <i data-lucide="user-round"></i>
+          </button>
+        </div>
+      </header>
+
+      <div class="app-content">
+        <section class="screen active" id="screen-landing" data-title="Landing Premium">
+          <div class="landing-hero">
+            <img src="assets/travelife-hero.png" alt="" class="landing-hero-img">
+            <div class="landing-hero-shade"></div>
+            <div class="landing-hero-content">
+              <span class="badge badge-white">FIFA World Cup 2026 Travel OS</span>
+              <h1>Tu viaje completo al Mundial, ordenado en una sola experiencia premium.</h1>
+              <p>TRAVELIFE combina itinerario, partidos, clima, seguridad, presupuesto y asistencia AI para moverte con calma entre ciudades sede.</p>
+              <div class="landing-hero-actions">
+                <button class="btn btn-primary btn-lg" type="button" data-screen-target="my-trip">
+                  <i data-lucide="route"></i>
+                  Ver Mi Viaje
+                </button>
+                <button class="btn btn-dark btn-lg" type="button" data-screen-target="ai">
+                  <i data-lucide="bot"></i>
+                  Planear con AI
+                </button>
+              </div>
+              <div class="landing-proof">
+                <div>
+                  <strong>12</strong>
+                  <span>dias cubiertos</span>
+                </div>
+                <div>
+                  <strong>4</strong>
+                  <span>ciudades sede</span>
+                </div>
+                <div>
+                  <strong>98%</strong>
+                  <span>plan listo</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="landing-grid">
+            <article class="card card-p landing-card-wide">
+              <div class="section-kicker">Travel Command Center</div>
+              <h2 class="section-title">Todo lo importante, antes de que lo necesites.</h2>
+              <div class="feature-row">
+                <div class="feature-pill"><i data-lucide="plane-takeoff"></i><span>Vuelos y check-ins</span></div>
+                <div class="feature-pill"><i data-lucide="ticket"></i><span>Partidos guardados</span></div>
+                <div class="feature-pill"><i data-lucide="cloud-sun"></i><span>Clima por ciudad</span></div>
+                <div class="feature-pill"><i data-lucide="shield-check"></i><span>Alertas de seguridad</span></div>
+              </div>
+            </article>
+            <article class="card card-p ai-mini-panel">
+              <div class="ai-mini-head">
+                <span class="stat-card-icon cyan"><i data-lucide="bot"></i></span>
+                <span class="badge badge-cyan">Travel AI</span>
+              </div>
+              <h3>Pregunta antes de moverte.</h3>
+              <p>Rutas, clima, presupuesto, zonas seguras y recomendaciones segun tu agenda del dia.</p>
+              <button class="btn btn-accent btn-full" type="button" data-screen-target="ai">Abrir asistente</button>
+            </article>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-dashboard" data-title="Inicio">
+          <div class="page-header">
+            <h1 class="page-title">Inicio <span class="gradient-text">TRAVELIFE</span></h1>
+            <p class="page-sub">Resumen ejecutivo de tu viaje demo a Mexico, Los Angeles y Miami.</p>
+            <div class="page-actions">
+              <button class="btn btn-primary" type="button" data-screen-target="my-trip"><i data-lucide="calendar-check"></i>Revisar itinerario</button>
+              <button class="btn btn-ghost" type="button" data-screen-target="weather"><i data-lucide="cloud-sun"></i>Clima</button>
+            </div>
+          </div>
+
+          <div class="match-hero">
+            <div class="match-hero-bg-t">T</div>
+            <div class="match-hero-top">
+              <div>
+                <div class="match-hero-label">Siguiente evento guardado</div>
+                <div class="match-hero-badge">Grupo A</div>
+              </div>
+              <span class="badge badge-white">Ciudad de Mexico</span>
+            </div>
+            <div class="match-teams">
+              <div class="match-team">
+                <div class="match-flag">MX</div>
+                <div class="match-tname">Mexico</div>
+                <div class="match-tsub">Local</div>
+              </div>
+              <div class="match-vs">
+                <span class="match-vs-txt">VS</span>
+                <div class="match-countdown" id="countdown"></div>
+              </div>
+              <div class="match-team">
+                <div class="match-flag">KR</div>
+                <div class="match-tname">Korea Republic</div>
+                <div class="match-tsub">Visitante</div>
+              </div>
+            </div>
+            <div class="match-hero-footer">
+              <div class="match-info-item"><i data-lucide="map-pin"></i> Estadio Azteca</div>
+              <div class="match-info-item"><i data-lucide="clock"></i> 19:00</div>
+              <div class="match-info-item"><i data-lucide="ticket"></i> 2 boletos</div>
+            </div>
+          </div>
+
+          <div class="dash-grid-3" id="dashboardStats"></div>
+
+          <div class="dash-grid">
+            <article class="budget-card">
+              <div class="budget-header">
+                <h3 class="budget-title">Presupuesto del viaje</h3>
+                <span class="badge badge-green">En rango</span>
+              </div>
+              <div class="budget-amounts"><span>Usado <strong>$2,840</strong></span><span>Total <strong>$4,200</strong></span></div>
+              <div class="budget-bar"><div class="budget-fill" style="width:68%"></div></div>
+              <div class="budget-pct">68% utilizado</div>
+              <div class="budget-cats">
+                <span class="bcat"><span class="bcat-dot" style="background:#1D4ED8"></span>Hotel</span>
+                <span class="bcat"><span class="bcat-dot" style="background:#06B6D4"></span>Transporte</span>
+                <span class="bcat"><span class="bcat-dot" style="background:#22C55E"></span>Comida</span>
+                <span class="bcat"><span class="bcat-dot" style="background:#F59E0B"></span>Tickets</span>
+              </div>
+            </article>
+            <article class="agenda-today card card-p">
+              <div class="card-head">
+                <h3>Agenda de hoy</h3>
+                <span class="badge badge-blue">3 eventos</span>
+              </div>
+              <div id="todayAgenda"></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-ai" data-title="Travel AI Assistant">
+          <div class="page-header compact-header">
+            <h1 class="page-title">Travel AI Assistant</h1>
+            <p class="page-sub">Asistente mock para responder sobre agenda, rutas, clima, presupuesto y seguridad.</p>
+          </div>
+          <div class="ai-layout">
+            <article class="ai-chat card">
+              <div class="ai-chat-header">
+                <div>
+                  <span class="badge badge-cyan">Online</span>
+                  <h2>Asistente TRAVELIFE</h2>
+                </div>
+                <button class="btn btn-ghost btn-sm" type="button" id="clearChat"><i data-lucide="rotate-ccw"></i>Limpiar</button>
+              </div>
+              <div class="ai-messages" id="aiMessages"></div>
+              <div class="ai-prompts" id="aiPrompts"></div>
+              <form class="ai-input-bar" id="aiForm">
+                <input class="form-input" id="aiInput" type="text" autocomplete="off" placeholder="Pregunta: Que hago si llueve antes del partido?">
+                <button class="btn btn-primary" type="submit" aria-label="Enviar"><i data-lucide="send"></i></button>
+              </form>
+            </article>
+            <aside class="ai-context">
+              <article class="card card-p">
+                <div class="card-head">
+                  <h3>Contexto activo</h3>
+                  <span class="badge badge-gold">Premium</span>
+                </div>
+                <div class="context-list">
+                  <div><i data-lucide="map-pin"></i><span>Ciudad actual</span><strong>CDMX</strong></div>
+                  <div><i data-lucide="ticket"></i><span>Siguiente partido</span><strong>19:00</strong></div>
+                  <div><i data-lucide="cloud-rain"></i><span>Riesgo lluvia</span><strong>42%</strong></div>
+                  <div><i data-lucide="shield-check"></i><span>Zona</span><strong>Verde</strong></div>
+                </div>
+              </article>
+              <article class="card card-p">
+                <h3 class="small-title">Acciones inteligentes</h3>
+                <button class="smart-action" type="button" data-ai-question="Organiza mi dia con traslados, comida y llegada al estadio.">
+                  <i data-lucide="calendar-clock"></i>
+                  <span>Optimizar mi dia</span>
+                </button>
+                <button class="smart-action" type="button" data-ai-question="Crea un plan B si hay lluvia fuerte antes del partido.">
+                  <i data-lucide="umbrella"></i>
+                  <span>Plan B por lluvia</span>
+                </button>
+                <button class="smart-action" type="button" data-ai-question="Revisa mi presupuesto y dime donde puedo ahorrar.">
+                  <i data-lucide="wallet"></i>
+                  <span>Revisar presupuesto</span>
+                </button>
+              </article>
+            </aside>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-my-trip" data-title="Mi Viaje">
+          <div class="page-header trip-header">
+            <div>
+              <h1 class="page-title">Mi Viaje</h1>
+              <p class="page-sub">Itinerario demo con reservas, traslados, partidos y tareas clave.</p>
+            </div>
+            <button class="btn btn-primary" type="button"><i data-lucide="plus"></i>Agregar evento</button>
+          </div>
+          <div class="trip-hero">
+            <div>
+              <span class="badge badge-white">12-24 junio 2026</span>
+              <h2>Mexico City, Los Angeles y Miami</h2>
+              <p>Ruta premium con vuelos, hoteles, partidos, restaurantes y ventanas de descanso.</p>
+            </div>
+            <div class="trip-score">
+              <strong>98%</strong>
+              <span>listo</span>
+            </div>
+          </div>
+          <div class="trip-layout">
+            <div class="timeline card" id="tripTimeline"></div>
+            <aside class="trip-side">
+              <article class="card card-p">
+                <div class="card-head">
+                  <h3>Checklist</h3>
+                  <span class="badge badge-green">6/8</span>
+                </div>
+                <div class="checklist" id="tripChecklist"></div>
+              </article>
+              <article class="card card-p">
+                <h3 class="small-title">Reservas</h3>
+                <div class="reservation-row"><i data-lucide="hotel"></i><span>Hotel Reforma</span><strong>Confirmado</strong></div>
+                <div class="reservation-row"><i data-lucide="plane"></i><span>Vuelo LAX</span><strong>Check-in 24h</strong></div>
+                <div class="reservation-row"><i data-lucide="car"></i><span>Transfer estadio</span><strong>Agendado</strong></div>
+              </article>
+            </aside>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-safety" data-title="Safety Center">
+          <div class="page-header compact-header">
+            <h1 class="page-title">Safety Center</h1>
+            <p class="page-sub">Alertas, contactos, documentos y recomendaciones mock por ciudad.</p>
+          </div>
+          <div class="safety-hero">
+            <div>
+              <span class="badge badge-green">Nivel verde</span>
+              <h2>Tu zona actual esta estable</h2>
+              <p>Ultima revision demo: movilidad normal, alta afluencia cerca del estadio desde las 16:00.</p>
+            </div>
+            <button class="btn btn-dark" type="button"><i data-lucide="phone-call"></i>Emergencia</button>
+          </div>
+          <div class="safety-grid">
+            <article class="card card-p">
+              <div class="card-head">
+                <h3>Alertas activas</h3>
+                <span class="badge badge-orange">2</span>
+              </div>
+              <div id="safetyAlerts"></div>
+            </article>
+            <article class="card card-p">
+              <div class="card-head">
+                <h3>Contactos rapidos</h3>
+                <span class="badge badge-blue">Local</span>
+              </div>
+              <div id="emergencyContacts"></div>
+            </article>
+            <article class="card card-p safety-wide">
+              <div class="card-head">
+                <h3>Documentos y cobertura</h3>
+                <button class="btn btn-ghost btn-sm" type="button"><i data-lucide="upload"></i>Subir</button>
+              </div>
+              <div class="doc-grid">
+                <div class="doc-card complete"><i data-lucide="passport"></i><span>Pasaporte</span><strong>Vigente</strong></div>
+                <div class="doc-card complete"><i data-lucide="heart-pulse"></i><span>Seguro medico</span><strong>Activo</strong></div>
+                <div class="doc-card warning"><i data-lucide="wifi"></i><span>eSIM backup</span><strong>Pendiente</strong></div>
+                <div class="doc-card complete"><i data-lucide="credit-card"></i><span>Tarjeta backup</span><strong>Lista</strong></div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-weather" data-title="Weather Center">
+          <div class="page-header weather-header">
+            <div>
+              <h1 class="page-title">Weather Center</h1>
+              <p class="page-sub">Clima mock por ciudad sede, recomendaciones de outfit y alertas de partido.</p>
+            </div>
+            <select class="settings-select" id="weatherCitySelect" aria-label="Ciudad">
+              <option value="cdmx">Ciudad de Mexico</option>
+              <option value="la">Los Angeles</option>
+              <option value="miami">Miami</option>
+              <option value="ny">New York</option>
+            </select>
+          </div>
+          <div class="weather-layout">
+            <article class="weather-main card" id="weatherMain"></article>
+            <aside class="weather-side">
+              <article class="card card-p">
+                <h3 class="small-title">Recomendacion AI</h3>
+                <p class="muted-text" id="weatherAdvice"></p>
+              </article>
+              <article class="card card-p">
+                <h3 class="small-title">Forecast 5 dias</h3>
+                <div id="forecastList"></div>
+              </article>
+            </aside>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-matches" data-title="Partidos">
+          <div class="page-header">
+            <h1 class="page-title">Partidos</h1>
+            <p class="page-sub">Calendario demo de encuentros guardados y disponibles.</p>
+          </div>
+          <div class="matches-grid" id="matchesGrid"></div>
+        </section>
+
+        <section class="screen" id="screen-map" data-title="Mapa">
+          <div class="page-header">
+            <h1 class="page-title">Mapa</h1>
+            <p class="page-sub">Puntos de interes mock cerca de estadios, hoteles y fan zones.</p>
+          </div>
+          <div class="map-layout">
+            <div class="map-container">
+              <div class="map-grid-lines"></div>
+              <div class="map-placeholder">
+                <div class="map-placeholder-icon"><i data-lucide="map"></i></div>
+                <div class="map-placeholder-text">Mapa interactivo demo</div>
+              </div>
+              <button class="map-pin" style="left:42%;top:48%" type="button"><span class="map-pin-icon"><i data-lucide="map-pin"></i></span><span class="map-pin-label">Hotel</span></button>
+              <button class="map-pin" style="left:62%;top:38%" type="button"><span class="map-pin-icon"><i data-lucide="map-pin"></i></span><span class="map-pin-label">Estadio</span></button>
+              <button class="map-pin" style="left:52%;top:68%" type="button"><span class="map-pin-icon"><i data-lucide="map-pin"></i></span><span class="map-pin-label">Fan Zone</span></button>
+              <div class="map-controls">
+                <button class="map-ctrl-btn" type="button" aria-label="Zoom in"><i data-lucide="plus"></i></button>
+                <button class="map-ctrl-btn" type="button" aria-label="Zoom out"><i data-lucide="minus"></i></button>
+              </div>
+              <select class="map-city-sel" aria-label="Ciudad del mapa">
+                <option>CDMX</option>
+                <option>Los Angeles</option>
+                <option>Miami</option>
+              </select>
+            </div>
+            <div class="map-sidebar" id="poiList"></div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-expenses" data-title="Gastos">
+          <div class="page-header">
+            <h1 class="page-title">Gastos</h1>
+            <p class="page-sub">Control de presupuesto mock por categorias y transacciones.</p>
+          </div>
+          <div class="expense-hero">
+            <div class="expense-hero-top">
+              <div>
+                <div class="expense-total-label">Total gastado</div>
+                <div class="expense-total-amt">$2,840</div>
+                <div class="expense-total-budget">de $4,200 presupuestados</div>
+              </div>
+              <button class="btn btn-dark" type="button"><i data-lucide="plus"></i>Gasto</button>
+            </div>
+            <div class="expense-bar"><div class="expense-bar-fill" style="width:68%"></div></div>
+            <div class="expense-bar-pct">Te quedan $1,360 disponibles</div>
+          </div>
+          <div class="expense-cats" id="expenseCats"></div>
+          <div class="transaction-list">
+            <div class="txn-header"><h3>Transacciones recientes</h3><span class="badge badge-blue">USD</span></div>
+            <div id="transactionsList"></div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-recommendations" data-title="Recomendaciones">
+          <div class="page-header">
+            <h1 class="page-title">Recomendaciones</h1>
+            <p class="page-sub">Lugares mock seleccionados para comer, descansar y moverse mejor.</p>
+          </div>
+          <div class="tabs" role="tablist">
+            <button class="tab-btn active" type="button" data-rec-tab="food"><i data-lucide="utensils"></i>Comida</button>
+            <button class="tab-btn" type="button" data-rec-tab="coffee"><i data-lucide="coffee"></i>Cafe</button>
+            <button class="tab-btn" type="button" data-rec-tab="transport"><i data-lucide="car"></i>Transporte</button>
+          </div>
+          <div class="rec-grid" id="recommendationsGrid"></div>
+        </section>
+
+        <section class="screen" id="screen-premium" data-title="Premium">
+          <div class="premium-hero">
+            <div class="premium-hero-tag"><i data-lucide="crown"></i> TRAVELIFE Premium</div>
+            <h1 class="premium-hero-title">Viaja como si tuvieras un equipo contigo.</h1>
+            <p class="premium-hero-sub">AI contextual, alertas proactivas, concierge y rutas optimizadas.</p>
+            <div class="premium-price"><span class="premium-price-big">$19</span><sub>/mes</sub></div>
+            <div class="premium-price-sub">Demo visual sin pagos reales</div>
+          </div>
+          <div class="premium-features">
+            <article class="pf-card"><div class="pf-icon"><i data-lucide="bot"></i></div><div class="pf-body"><h3 class="pf-title">Travel AI ilimitado</h3><p class="pf-desc">Respuestas con contexto de agenda, clima, seguridad y gasto.</p></div></article>
+            <article class="pf-card"><div class="pf-icon"><i data-lucide="bell-ring"></i></div><div class="pf-body"><h3 class="pf-title">Alertas premium</h3><p class="pf-desc">Cambios de clima, retrasos, trafico y zonas de alta afluencia.</p></div></article>
+            <article class="pf-card"><div class="pf-icon"><i data-lucide="map"></i></div><div class="pf-body"><h3 class="pf-title">Mapas inteligentes</h3><p class="pf-desc">Rutas al estadio, zonas seguras y puntos guardados.</p></div></article>
+            <article class="pf-card"><div class="pf-icon"><i data-lucide="headphones"></i></div><div class="pf-body"><h3 class="pf-title">Concierge</h3><p class="pf-desc">Soporte prioritario mock para reservas y emergencias.</p></div></article>
+          </div>
+          <div class="premium-cta">
+            <button class="btn btn-gold btn-lg" type="button"><i data-lucide="sparkles"></i>Activar Premium</button>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-profile" data-title="Perfil">
+          <div class="profile-hero">
+            <button class="btn btn-dark btn-sm profile-edit-btn" type="button"><i data-lucide="pencil"></i>Editar</button>
+            <div class="profile-avatar"><i data-lucide="user-round"></i></div>
+            <div class="profile-name">Alex Rivera</div>
+            <div class="profile-sub">Viajero premium · Mundial 2026</div>
+            <div class="profile-stats">
+              <div class="prof-stat"><div class="prof-stat-val">18</div><div class="prof-stat-lbl">viajes</div></div>
+              <div class="prof-stat"><div class="prof-stat-val">7</div><div class="prof-stat-lbl">ciudades</div></div>
+              <div class="prof-stat"><div class="prof-stat-val">4.9</div><div class="prof-stat-lbl">rating</div></div>
+            </div>
+          </div>
+          <div class="profile-section">
+            <div class="profile-section-title">Datos</div>
+            <div class="profile-row"><span class="profile-row-label">Email</span><span class="profile-row-value">alex@travelife.demo</span></div>
+            <div class="profile-row"><span class="profile-row-label">Plan</span><span class="profile-row-value"><span class="badge badge-gold">Premium</span></span></div>
+            <div class="profile-row"><span class="profile-row-label">Ciudad base</span><span class="profile-row-value">Ciudad de Mexico</span></div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-settings" data-title="Configuracion">
+          <div class="page-header">
+            <h1 class="page-title">Configuracion</h1>
+            <p class="page-sub">Preferencias demo para notificaciones, moneda, idioma y privacidad.</p>
+          </div>
+          <div class="settings-section">
+            <div class="settings-section-title">Notificaciones</div>
+            <div class="settings-row"><div class="settings-row-left"><span class="settings-row-icon"><i data-lucide="bell"></i></span><div><div class="settings-row-label">Alertas de viaje</div><div class="settings-row-sub">Clima, seguridad y cambios de agenda</div></div></div><button class="toggle on" type="button" aria-label="Alertas de viaje"></button></div>
+            <div class="settings-row"><div class="settings-row-left"><span class="settings-row-icon"><i data-lucide="ticket"></i></span><div><div class="settings-row-label">Recordatorios de partido</div><div class="settings-row-sub">Avisos antes de salir al estadio</div></div></div><button class="toggle on" type="button" aria-label="Recordatorios"></button></div>
+          </div>
+          <div class="settings-section">
+            <div class="settings-section-title">Preferencias</div>
+            <div class="settings-row"><div class="settings-row-left"><span class="settings-row-icon"><i data-lucide="languages"></i></span><div><div class="settings-row-label">Idioma</div><div class="settings-row-sub">Interfaz principal</div></div></div><select class="settings-select"><option>Español</option><option>English</option></select></div>
+            <div class="settings-row"><div class="settings-row-left"><span class="settings-row-icon"><i data-lucide="circle-dollar-sign"></i></span><div><div class="settings-row-label">Moneda</div><div class="settings-row-sub">Presupuesto y gastos</div></div></div><select class="settings-select"><option>USD</option><option>MXN</option></select></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </section>
+
+  <nav class="bottom-nav" aria-label="Movil">
+    <div class="bottom-nav-inner">
+      <a class="bn-item active" href="#landing" data-screen-target="landing"><span class="bn-icon"><i data-lucide="sparkles"></i></span><span class="bn-label">Home</span></a>
+      <a class="bn-item" href="#my-trip" data-screen-target="my-trip"><span class="bn-icon"><i data-lucide="route"></i></span><span class="bn-label">Viaje</span></a>
+      <a class="bn-item" href="#ai" data-screen-target="ai"><span class="bn-icon"><i data-lucide="bot"></i></span><span class="bn-label">AI</span></a>
+      <a class="bn-item" href="#safety" data-screen-target="safety"><span class="bn-icon"><i data-lucide="shield"></i></span><span class="bn-label">Safety</span></a>
+      <a class="bn-item" href="#weather" data-screen-target="weather"><span class="bn-icon"><i data-lucide="cloud-sun"></i></span><span class="bn-label">Clima</span></a>
+    </div>
+  </nav>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
