@@ -15,34 +15,34 @@ const mock = {
   itinerary: [
     {
       day: "Dia 1",
-      date: "12 Jun",
-      city: "Ciudad de Mexico",
+      date: "20 Jun",
+      city: "Guadalajara → CDMX",
       status: "Confirmado",
       items: [
-        { icon: "plane", title: "Llegada a AICM", meta: "Terminal 2 · traslado privado" },
-        { icon: "hotel", title: "Hotel Reforma", meta: "3 noches · desayuno incluido" },
+        { icon: "plane", title: "Vuelo GDL → CDMX", meta: "Salida 09:30 · llegada AICM T2" },
+        { icon: "hotel", title: "Check-in Hotel Reforma", meta: "7 noches · desayuno incluido" },
         { icon: "utensils", title: "Cena en Polanco", meta: "Reserva 20:30" }
       ]
     },
     {
-      day: "Dia 3",
-      date: "14 Jun",
+      day: "Dia 6",
+      date: "25 Jun",
       city: "Partido en CDMX",
       status: "Alta prioridad",
       items: [
         { icon: "cloud-sun", title: "Revision de clima", meta: "Llevar capa ligera" },
-        { icon: "ticket", title: "Mexico vs Korea Republic", meta: "Estadio Azteca · puerta 4" },
+        { icon: "ticket", title: "Mexico vs República Checa", meta: "Estadio Azteca · 19:00 · puerta 4" },
         { icon: "car", title: "Regreso al hotel", meta: "Punto de reunion norte" }
       ]
     },
     {
-      day: "Dia 6",
-      date: "17 Jun",
-      city: "Los Angeles",
+      day: "Dia 8",
+      date: "27 Jun",
+      city: "CDMX → Guadalajara",
       status: "Pendiente check-in",
       items: [
-        { icon: "plane-takeoff", title: "Vuelo a LAX", meta: "Asiento 14A · equipaje incluido" },
-        { icon: "map-pin", title: "Fan Zone Santa Monica", meta: "Ventana libre 18:00" }
+        { icon: "plane-takeoff", title: "Vuelo CDMX → GDL", meta: "Salida 18:00 · equipaje incluido" },
+        { icon: "car", title: "Traslado al aeropuerto", meta: "Pickup hotel 15:30" }
       ]
     }
   ],
@@ -132,7 +132,7 @@ const mock = {
     }
   },
   matches: [
-    { group: "Grupo A", a: "Mexico", b: "Korea Republic", date: "14 Jun", city: "CDMX", saved: true },
+    { group: "Grupo A", a: "Mexico", b: "República Checa", date: "25 Jun", city: "CDMX", saved: true },
     { group: "Grupo B", a: "USA", b: "Canada", date: "17 Jun", city: "Los Angeles", saved: true },
     { group: "Grupo C", a: "Brazil", b: "Japan", date: "21 Jun", city: "Miami", saved: false },
     { group: "Octavos", a: "TBD", b: "TBD", date: "29 Jun", city: "New York", saved: false }
@@ -521,7 +521,7 @@ function submitAiQuestion(question) {
 }
 
 function updateCountdown() {
-  const target = new Date("2026-06-20T19:00:00-06:00").getTime();
+  const target = new Date("2026-06-25T19:00:00-06:00").getTime();
   const now = Date.now();
   const distance = Math.max(0, target - now);
   const days = Math.floor(distance / 86400000);
