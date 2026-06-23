@@ -1134,6 +1134,111 @@ function updateCountdown() {
   `).join('<span class="cd-sep">:</span>');
 }
 
+/* ============================================================
+   PERFIL EDITABLE (nombre, descripción, email, ciudad y foto)
+   Se guarda en el navegador (localStorage) para que no se pierda.
+   ============================================================ */
+const PROFILE = {
+  name: TRIP.traveler,
+  sub: "Viajero premium · Mundial 2026",
+  email: "rodrigo@travelife.demo",
+  city: TRIP.homeCity,
+  avatar: null
+};
+
+function loadProfile() {
+  try { const raw = localStorage.getItem("tl_profile"); if (raw) Object.assign(PROFILE, JSON.parse(raw)); } catch (e) { /* ignora */ }
+}
+function saveProfile() {
+  try { localStorage.setItem("tl_profile", JSON.stringify(PROFILE)); } catch (e) { /* ignora (modo privado) */ }
+}
+
+function applyAvatar(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (PROFILE.avatar) {
+    el.style.backgroundImage = `url(${PROFILE.avatar})`;
+    el.style.backgroundSize = "cover";
+    el.style.backgroundPosition = "center";
+    el.classList.add("has-photo");
+  } else {
+    el.style.backgroundImage = "";
+    el.classList.remove("has-photo");
+  }
+}
+
+function renderProfile() {
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set("profileName", PROFILE.name);
+  set("profileSub", PROFILE.sub);
+  set("profileEmail", PROFILE.email);
+  set("profileCity", PROFILE.city);
+  set("sidebarName", PROFILE.name);
+  applyAvatar("profileAvatar");
+  applyAvatar("sidebarAvatar");
+}
+
+/* Redimensiona la imagen (máx 256px) antes de guardarla, para no llenar
+   el almacenamiento del navegador. */
+function downscaleImage(file, max, cb) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > h && w > max) { h = Math.round(h * max / w); w = max; }
+      else if (h > max) { w = Math.round(w * max / h); h = max; }
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      cb(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function openProfileEditor() {
+  if (!(window.TL && window.TL.openModal)) return;
+  window.TL.openModal({
+    title: "Editar perfil", icon: "user-round", submitText: "Guardar cambios",
+    fields: [
+      { name: "name", label: "Nombre", value: PROFILE.name, required: true },
+      { name: "sub", label: "Descripción", value: PROFILE.sub },
+      { name: "email", label: "Email", type: "email", value: PROFILE.email },
+      { name: "city", label: "Ciudad base", value: PROFILE.city }
+    ],
+    onSubmit: d => {
+      if (d.name) PROFILE.name = d.name;
+      PROFILE.sub = d.sub;
+      PROFILE.email = d.email;
+      PROFILE.city = d.city;
+      saveProfile();
+      renderProfile();
+      tlToast("Perfil actualizado.", { title: "Perfil", icon: "check-circle-2" });
+    }
+  });
+}
+
+function initProfile() {
+  loadProfile();
+  renderProfile();
+  const avatarBtn = $("#profileAvatar");
+  const fileInput = $("#profilePhotoInput");
+  if (avatarBtn && fileInput) avatarBtn.addEventListener("click", () => fileInput.click());
+  if (fileInput) fileInput.addEventListener("change", e => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    downscaleImage(file, 256, dataUrl => {
+      PROFILE.avatar = dataUrl;
+      saveProfile();
+      renderProfile();
+      tlToast("Foto de perfil actualizada.", { title: "Perfil", icon: "image" });
+    });
+    e.target.value = ""; // permite volver a elegir la misma foto
+  });
+}
+
 function tripMatchDateShort() {
   try {
     return new Date(TRIP.match.datetimeISO).toLocaleDateString("es-MX", { day: "numeric", month: "short" }).replace(".", "");
@@ -1196,6 +1301,9 @@ function boot() {
   const initial = window.location.hash.replace("#", "") || "landing";
   navigate(initial, false);
   renderIcons();
+
+  // Perfil editable (carga lo guardado y enlaza la foto)
+  initProfile();
 
   // Idioma y moneda: prepara el sistema y trae el tipo de cambio real
   applyLanguage("es");
@@ -1474,9 +1582,9 @@ document.addEventListener("DOMContentLoaded", boot);
       });
     });
 
-    // Perfil -> Editar (lleva a Configuracion)
+    // Perfil -> Editar (abre el editor de perfil)
     const edit = $(".profile-edit-btn");
-    if (edit) edit.addEventListener("click", () => navigate("settings"));
+    if (edit) edit.addEventListener("click", openProfileEditor);
 
     // Mapa real: cambio de ciudad sede -> redibuja mapa, marcadores y ruta real
     const mapCity = $("#mapCitySel");

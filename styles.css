@@ -2359,3 +2359,17 @@ svg { width: 1em; height: 1em; display: block; stroke-width: 2 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important }
 }
+
+/* ============================================================
+   TRAVELIFE 2026 — Perfil editable (avatar con foto)
+   ============================================================ */
+.profile-avatar { position:relative; cursor:pointer; border:none; padding:0;
+  background-size:cover; background-position:center; transition:transform .2s ease, box-shadow .2s ease }
+.profile-avatar:hover { transform:translateY(-2px); box-shadow:var(--shadow-lg) }
+.profile-avatar.has-photo > i[data-lucide], .profile-avatar.has-photo > svg:not(.profile-avatar-edit svg) { display:none }
+.profile-avatar-edit { position:absolute; right:2px; bottom:2px; width:28px; height:28px;
+  border-radius:50%; background:var(--primary,#1D4ED8); color:#fff; display:flex; align-items:center;
+  justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,.35); border:2px solid #fff }
+.profile-avatar-edit svg { width:14px; height:14px }
+.sidebar-avatar { background-size:cover; background-position:center }
+.sidebar-avatar.has-photo > i[data-lucide], .sidebar-avatar.has-photo > svg { display:none }

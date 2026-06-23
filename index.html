@@ -95,9 +95,9 @@
       </nav>
 
       <div class="sidebar-user">
-        <div class="sidebar-avatar" aria-hidden="true"><i data-lucide="badge-check"></i></div>
+        <div class="sidebar-avatar" id="sidebarAvatar" aria-hidden="true"><i data-lucide="badge-check"></i></div>
         <div>
-          <div class="sidebar-uname">Rodrigo Ascencio</div>
+          <div class="sidebar-uname" id="sidebarName">Rodrigo Ascencio</div>
           <div class="sidebar-uplan">Travelife Premium</div>
         </div>
         <button class="sidebar-logout" type="button" aria-label="Salir">
@@ -518,9 +518,13 @@
         <section class="screen" id="screen-profile" data-title="Perfil">
           <div class="profile-hero">
             <button class="btn btn-dark btn-sm profile-edit-btn" type="button"><i data-lucide="pencil"></i>Editar</button>
-            <div class="profile-avatar"><i data-lucide="user-round"></i></div>
-            <div class="profile-name">Rodrigo Ascencio</div>
-            <div class="profile-sub">Viajero premium · Mundial 2026</div>
+            <button class="profile-avatar" id="profileAvatar" type="button" aria-label="Cambiar foto de perfil">
+              <i data-lucide="user-round"></i>
+              <span class="profile-avatar-edit"><i data-lucide="camera"></i></span>
+            </button>
+            <input type="file" id="profilePhotoInput" accept="image/*" hidden>
+            <div class="profile-name" id="profileName">Rodrigo Ascencio</div>
+            <div class="profile-sub" id="profileSub">Viajero premium · Mundial 2026</div>
             <div class="profile-stats">
               <div class="prof-stat"><div class="prof-stat-val">18</div><div class="prof-stat-lbl">viajes</div></div>
               <div class="prof-stat"><div class="prof-stat-val">7</div><div class="prof-stat-lbl">ciudades</div></div>
@@ -529,9 +533,9 @@
           </div>
           <div class="profile-section">
             <div class="profile-section-title">Datos</div>
-            <div class="profile-row"><span class="profile-row-label">Email</span><span class="profile-row-value">rodrigo@travelife.demo</span></div>
+            <div class="profile-row"><span class="profile-row-label">Email</span><span class="profile-row-value" id="profileEmail">rodrigo@travelife.demo</span></div>
             <div class="profile-row"><span class="profile-row-label">Plan</span><span class="profile-row-value"><span class="badge badge-gold">Premium</span></span></div>
-            <div class="profile-row"><span class="profile-row-label">Ciudad base</span><span class="profile-row-value">Guadalajara</span></div>
+            <div class="profile-row"><span class="profile-row-label">Ciudad base</span><span class="profile-row-value" id="profileCity">Guadalajara</span></div>
           </div>
         </section>
 
