@@ -6,6 +6,19 @@
   <title>TRAVELIFE 2026</title>
   <meta name="description" content="TRAVELIFE 2026 premium travel companion for match trips, safety, weather, budgets and AI planning.">
   <link rel="stylesheet" href="styles.css">
+  <!-- Leaflet: mapa real (OpenStreetMap) gratuito, sin API key -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <script>
+    /* =========================================================
+       CONFIG TRAVELIFE — IA real (Gemini gratis vía proxy)
+       Pega aquí la URL de tu Cloudflare Worker (ver SETUP-IA.md).
+       Mientras esté vacío, el asistente usa respuestas locales.
+       ========================================================= */
+    window.TRAVELIFE_CONFIG = {
+      AI_PROXY_URL: ""   // ej: "https://travelife-ai.tu-usuario.workers.dev"
+    };
+  </script>
 </head>
 <body>
   <section id="app-section" aria-label="TRAVELIFE 2026">
@@ -248,7 +261,7 @@
         <section class="screen" id="screen-ai" data-title="Travel AI Assistant">
           <div class="page-header compact-header">
             <h1 class="page-title">Travel AI Assistant</h1>
-            <p class="page-sub">Asistente mock para responder sobre agenda, rutas, clima, presupuesto y seguridad.</p>
+            <p class="page-sub">Asistente con IA real (Google Gemini) para responder sobre agenda, rutas, clima, presupuesto y seguridad.</p>
           </div>
           <div class="ai-layout">
             <article class="ai-chat card">
@@ -384,7 +397,7 @@
           <div class="page-header weather-header">
             <div>
               <h1 class="page-title">Weather Center</h1>
-              <p class="page-sub">Clima mock por ciudad sede, recomendaciones de outfit y alertas de partido.</p>
+              <p class="page-sub">Clima real (Open-Meteo) por ciudad sede, recomendaciones de outfit y alertas de partido.</p>
             </div>
             <select class="settings-select" id="weatherCitySelect" aria-label="Ciudad">
               <option value="cdmx">Ciudad de Mexico</option>
@@ -419,26 +432,20 @@
         <section class="screen" id="screen-map" data-title="Mapa">
           <div class="page-header">
             <h1 class="page-title">Mapa</h1>
-            <p class="page-sub">Puntos de interes mock cerca de estadios, hoteles y fan zones.</p>
+            <p class="page-sub">Mapa real con rutas al estadio, hoteles y fan zones de las sedes del Mundial 2026.</p>
+          </div>
+          <div class="map-route-banner" id="mapRouteBanner">
+            <span class="map-route-ic"><i data-lucide="route"></i></span>
+            <div class="map-route-info" id="mapRouteInfo">Calculando ruta real al estadio…</div>
           </div>
           <div class="map-layout">
             <div class="map-container">
-              <div class="map-grid-lines"></div>
-              <div class="map-placeholder">
-                <div class="map-placeholder-icon"><i data-lucide="map"></i></div>
-                <div class="map-placeholder-text">Mapa interactivo demo</div>
-              </div>
-              <button class="map-pin" style="left:42%;top:48%" type="button"><span class="map-pin-icon"><i data-lucide="map-pin"></i></span><span class="map-pin-label">Hotel</span></button>
-              <button class="map-pin" style="left:62%;top:38%" type="button"><span class="map-pin-icon"><i data-lucide="map-pin"></i></span><span class="map-pin-label">Estadio</span></button>
-              <button class="map-pin" style="left:52%;top:68%" type="button"><span class="map-pin-icon"><i data-lucide="map-pin"></i></span><span class="map-pin-label">Fan Zone</span></button>
-              <div class="map-controls">
-                <button class="map-ctrl-btn" type="button" aria-label="Zoom in"><i data-lucide="plus"></i></button>
-                <button class="map-ctrl-btn" type="button" aria-label="Zoom out"><i data-lucide="minus"></i></button>
-              </div>
-              <select class="map-city-sel" aria-label="Ciudad del mapa">
-                <option>CDMX</option>
-                <option>Los Angeles</option>
-                <option>Miami</option>
+              <div id="leafletMap" class="leaflet-map"></div>
+              <select class="map-city-sel" id="mapCitySel" aria-label="Ciudad del mapa">
+                <option value="cdmx">Ciudad de México</option>
+                <option value="la">Los Angeles</option>
+                <option value="miami">Miami</option>
+                <option value="ny">New York / NJ</option>
               </select>
             </div>
             <div class="map-sidebar" id="poiList"></div>
@@ -552,6 +559,8 @@
   </nav>
 
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="app.js"></script>
 </body>
 </html>

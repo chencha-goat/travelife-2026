@@ -202,6 +202,10 @@ function navigate(screenId, updateHash = true) {
   if (updateHash && window.location.hash !== `#${screenId}`) {
     history.pushState(null, "", `#${screenId}`);
   }
+
+  // Inicialización perezosa / refresco al entrar a cada sección
+  if (screenId === "map") renderMap();
+  if (screenId === "weather") renderWeather($("#weatherCitySelect")?.value || "cdmx");
 }
 
 function bindNavigation() {
@@ -312,33 +316,85 @@ function renderSafety() {
   `).join("");
 }
 
-function renderWeather(cityId = "cdmx") {
-  const item = mock.weather[cityId];
-  $("#weatherMain").innerHTML = `
-    <div class="weather-current">
-      <div>
-        <span class="badge badge-cyan">${item.city}</span>
-        <h2>${item.temp}°</h2>
-        <p>${item.condition}</p>
-      </div>
-      <div class="weather-icon"><i data-lucide="cloud-sun"></i></div>
-    </div>
-    <div class="weather-metrics">
-      <div><i data-lucide="cloud-rain"></i><span>Lluvia</span><strong>${item.rain}</strong></div>
-      <div><i data-lucide="wind"></i><span>Viento</span><strong>${item.wind}</strong></div>
-      <div><i data-lucide="sun"></i><span>UV</span><strong>${item.uv}</strong></div>
-    </div>
-  `;
-  $("#weatherAdvice").textContent = item.advice;
-  $("#forecastList").innerHTML = item.forecast.map(day => `
-    <div class="forecast-row">
-      <strong>${day[0]}</strong>
-      <span>${day[2]}</span>
-      <b>${day[1]}</b>
-      <em>${day[3]}</em>
-    </div>
-  `).join("");
+/* Códigos meteorológicos WMO -> texto en español + icono Lucide */
+function wmoToInfo(code) {
+  const map = {
+    0: ["Despejado", "sun"], 1: ["Mayormente despejado", "sun"], 2: ["Parcialmente nublado", "cloud-sun"],
+    3: ["Nublado", "cloud"], 45: ["Niebla", "cloud-fog"], 48: ["Niebla con escarcha", "cloud-fog"],
+    51: ["Llovizna ligera", "cloud-drizzle"], 53: ["Llovizna", "cloud-drizzle"], 55: ["Llovizna intensa", "cloud-drizzle"],
+    61: ["Lluvia ligera", "cloud-rain"], 63: ["Lluvia", "cloud-rain"], 65: ["Lluvia fuerte", "cloud-rain-wind"],
+    71: ["Nieve ligera", "cloud-snow"], 73: ["Nieve", "cloud-snow"], 75: ["Nieve fuerte", "cloud-snow"],
+    80: ["Chubascos", "cloud-rain"], 81: ["Chubascos", "cloud-rain"], 82: ["Chubascos fuertes", "cloud-rain-wind"],
+    95: ["Tormenta", "cloud-lightning"], 96: ["Tormenta con granizo", "cloud-lightning"], 99: ["Tormenta fuerte", "cloud-lightning"]
+  };
+  return map[code] || ["Variable", "cloud-sun"];
+}
+
+function weatherAdvice(temp, rainProb, condition) {
+  const parts = [];
+  if (rainProb >= 60) parts.push("alta probabilidad de lluvia: lleva impermeable compacto y sal con 25 min extra");
+  else if (rainProb >= 30) parts.push("posible lluvia: una capa ligera no estorba");
+  else parts.push("baja probabilidad de lluvia");
+  if (temp >= 30) parts.push("calor: hidrátate, gorra y bloqueador");
+  else if (temp <= 12) parts.push("frío: lleva chamarra abrigadora");
+  else parts.push("temperatura agradable para caminar");
+  return `Hoy: ${condition.toLowerCase()}. ${parts.join("; ")}.`;
+}
+
+async function renderWeather(cityId = "cdmx") {
+  const city = HOST_CITIES[cityId] || HOST_CITIES.cdmx;
+  const main = $("#weatherMain");
+  if (main) main.innerHTML = `<div class="weather-current"><div><span class="badge badge-cyan">${city.name}</span><h2>…</h2><p>Cargando clima real…</p></div><div class="weather-icon"><i data-lucide="loader"></i></div></div>`;
   renderIcons();
+
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.weather.lat}&longitude=${city.weather.lon}`
+    + `&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,uv_index`
+    + `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max`
+    + `&timezone=auto&forecast_days=5`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const cur = data.current;
+    const [condition, icon] = wmoToInfo(cur.weather_code);
+    const rainProb = data.daily.precipitation_probability_max[0] ?? 0;
+    const uv = cur.uv_index;
+    const uvLabel = uv == null ? "—" : uv >= 8 ? "Muy alto" : uv >= 6 ? "Alto" : uv >= 3 ? "Medio" : "Bajo";
+
+    $("#weatherMain").innerHTML = `
+      <div class="weather-current">
+        <div>
+          <span class="badge badge-cyan">${city.name}</span>
+          <h2>${Math.round(cur.temperature_2m)}°</h2>
+          <p>${condition}</p>
+        </div>
+        <div class="weather-icon"><i data-lucide="${icon}"></i></div>
+      </div>
+      <div class="weather-metrics">
+        <div><i data-lucide="cloud-rain"></i><span>Lluvia</span><strong>${rainProb}%</strong></div>
+        <div><i data-lucide="wind"></i><span>Viento</span><strong>${Math.round(cur.wind_speed_10m)} km/h</strong></div>
+        <div><i data-lucide="sun"></i><span>UV</span><strong>${uvLabel}</strong></div>
+      </div>
+    `;
+    $("#weatherAdvice").textContent = weatherAdvice(cur.temperature_2m, rainProb, condition);
+
+    const days = data.daily.time.map((iso, i) => {
+      const d = new Date(iso + "T12:00:00");
+      const dayName = i === 0 ? "Hoy" : d.toLocaleDateString("es-MX", { weekday: "short" }).replace(".", "");
+      const [cond] = wmoToInfo(data.daily.weather_code[i]);
+      return `<div class="forecast-row">
+        <strong>${dayName}</strong>
+        <span>${cond}</span>
+        <b>${Math.round(data.daily.temperature_2m_max[i])}°</b>
+        <em>${data.daily.precipitation_probability_max[i] ?? 0}%</em>
+      </div>`;
+    }).join("");
+    $("#forecastList").innerHTML = days;
+    renderIcons();
+  } catch (e) {
+    $("#weatherMain").innerHTML = `<div class="weather-current"><div><span class="badge badge-orange">${city.name}</span><h2>—</h2><p>No se pudo cargar el clima real. Revisa tu conexión.</p></div><div class="weather-icon"><i data-lucide="cloud-off"></i></div></div>`;
+    renderIcons();
+  }
 }
 
 function renderMatches() {
@@ -363,9 +419,122 @@ function renderMatches() {
   `).join("");
 }
 
-function renderMap() {
-  $("#poiList").innerHTML = mock.poi.map(point => `
-    <article class="poi-card">
+/* ============================================================
+   DATOS REALES — Sedes del Mundial FIFA 2026 (coordenadas reales)
+   Estadios oficiales, hoteles de referencia y fan zones.
+   ============================================================ */
+const HOST_CITIES = {
+  cdmx: {
+    name: "Ciudad de México", center: [19.36, -99.16], zoom: 11,
+    weather: { lat: 19.4326, lon: -99.1332 },
+    places: [
+      { type: "stadium", icon: "ticket", name: "Estadio Azteca", addr: "Calz. de Tlalpan 3465, Coyoacán", coord: [19.3029, -99.1505], tag: "Sede del partido" },
+      { type: "hotel", icon: "hotel", name: "Zona Paseo de la Reforma", addr: "Hoteles · Cuauhtémoc", coord: [19.4270, -99.1677], tag: "Alojamiento" },
+      { type: "fanzone", icon: "flag", name: "Fan Festival — Zócalo", addr: "Plaza de la Constitución", coord: [19.4326, -99.1332], tag: "Fan Zone" },
+      { type: "safe", icon: "shield-check", name: "Hospital Ángeles Roma", addr: "Punto médico de referencia", coord: [19.4150, -99.1620], tag: "Apoyo 24h" }
+    ]
+  },
+  la: {
+    name: "Los Angeles", center: [33.99, -118.30], zoom: 11,
+    weather: { lat: 33.9535, lon: -118.3392 },
+    places: [
+      { type: "stadium", icon: "ticket", name: "SoFi Stadium", addr: "1001 Stadium Dr, Inglewood", coord: [33.9535, -118.3392], tag: "Sede del partido" },
+      { type: "hotel", icon: "hotel", name: "Downtown LA", addr: "Hoteles · centro", coord: [34.0494, -118.2548], tag: "Alojamiento" },
+      { type: "fanzone", icon: "flag", name: "Fan Festival — L.A. LIVE", addr: "800 W Olympic Blvd", coord: [34.0430, -118.2673], tag: "Fan Zone" },
+      { type: "safe", icon: "shield-check", name: "Centro de visitantes", addr: "Punto de apoyo", coord: [34.0410, -118.2670], tag: "Apoyo 24h" }
+    ]
+  },
+  miami: {
+    name: "Miami", center: [25.86, -80.20], zoom: 11,
+    weather: { lat: 25.9580, lon: -80.2389 },
+    places: [
+      { type: "stadium", icon: "ticket", name: "Hard Rock Stadium", addr: "347 Don Shula Dr, Miami Gardens", coord: [25.9580, -80.2389], tag: "Sede del partido" },
+      { type: "hotel", icon: "hotel", name: "South Beach", addr: "Hoteles · Miami Beach", coord: [25.7907, -80.1300], tag: "Alojamiento" },
+      { type: "fanzone", icon: "flag", name: "Fan Festival — Bayfront Park", addr: "301 Biscayne Blvd", coord: [25.7753, -80.1860], tag: "Fan Zone" },
+      { type: "safe", icon: "shield-check", name: "Jackson Memorial", addr: "Punto médico de referencia", coord: [25.7890, -80.2110], tag: "Apoyo 24h" }
+    ]
+  },
+  ny: {
+    name: "New York / NJ", center: [40.78, -74.02], zoom: 11,
+    weather: { lat: 40.8135, lon: -74.0745 },
+    places: [
+      { type: "stadium", icon: "ticket", name: "MetLife Stadium", addr: "1 MetLife Stadium Dr, East Rutherford NJ", coord: [40.8135, -74.0745], tag: "Final · sede" },
+      { type: "hotel", icon: "hotel", name: "Midtown Manhattan", addr: "Hoteles · Times Square", coord: [40.7549, -73.9840], tag: "Alojamiento" },
+      { type: "fanzone", icon: "flag", name: "Fan Festival — Liberty State Park", addr: "Jersey City, NJ", coord: [40.7050, -74.0560], tag: "Fan Zone" },
+      { type: "safe", icon: "shield-check", name: "Mount Sinai West", addr: "Punto médico de referencia", coord: [40.7700, -73.9870], tag: "Apoyo 24h" }
+    ]
+  }
+};
+
+let tlMap = null;
+let tlLayers = null;
+let tlCurrentCity = "cdmx";
+
+function makeMarkerIcon(place) {
+  return L.divIcon({
+    className: "",
+    html: `<div class="tl-marker ${place.type}"><i data-lucide="${place.icon}"></i></div>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 34],
+    popupAnchor: [0, -32]
+  });
+}
+
+async function drawRealRoute(from, to, stadiumName) {
+  const banner = $("#mapRouteInfo");
+  const url = `https://router.project-osrm.org/route/v1/driving/${from.coord[1]},${from.coord[0]};${to.coord[1]},${to.coord[0]}?overview=full&geometries=geojson`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const route = data.routes && data.routes[0];
+    if (!route) throw new Error("sin ruta");
+    const line = route.geometry.coordinates.map(c => [c[1], c[0]]);
+    const poly = L.polyline(line, { color: "#22D3EE", weight: 5, opacity: 0.9 }).addTo(tlLayers);
+    L.polyline(line, { color: "#0A1628", weight: 9, opacity: 0.25 }).addTo(tlLayers).bringToBack();
+    const km = (route.distance / 1000).toFixed(1);
+    const min = Math.round(route.duration / 60);
+    if (banner) banner.innerHTML = `<strong>${from.name} → ${stadiumName}</strong> · <b>${km} km</b> · ~<b>${min} min</b> en auto (ruta real OSRM)`;
+    if (tlMap) tlMap.fitBounds(poly.getBounds().pad(0.25));
+  } catch (e) {
+    if (banner) banner.innerHTML = `<strong>${from.name} → ${stadiumName}</strong> · ruta directa (no se pudo calcular el trazado en este momento).`;
+    L.polyline([from.coord, to.coord], { color: "#22D3EE", weight: 4, dashArray: "8 8", opacity: 0.8 }).addTo(tlLayers);
+  }
+}
+
+function renderMap(cityId = tlCurrentCity) {
+  const city = HOST_CITIES[cityId] || HOST_CITIES.cdmx;
+  tlCurrentCity = cityId;
+  const mapEl = $("#leafletMap");
+  if (!mapEl || !window.L) return;
+
+  if (!tlMap) {
+    tlMap = L.map(mapEl, { zoomControl: true, attributionControl: true }).setView(city.center, city.zoom);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(tlMap);
+    tlLayers = L.layerGroup().addTo(tlMap);
+  } else {
+    tlLayers.clearLayers();
+    tlMap.setView(city.center, city.zoom);
+  }
+
+  const bounds = [];
+  city.places.forEach(place => {
+    const marker = L.marker(place.coord, { icon: makeMarkerIcon(place) }).addTo(tlLayers);
+    marker.bindPopup(`<strong>${place.name}</strong><small>${place.addr}</small>`);
+    bounds.push(place.coord);
+  });
+  if (bounds.length) tlMap.fitBounds(bounds, { padding: [40, 40] });
+
+  // Ruta real hotel -> estadio
+  const hotel = city.places.find(p => p.type === "hotel");
+  const stadium = city.places.find(p => p.type === "stadium");
+  if (hotel && stadium) drawRealRoute(hotel, stadium, stadium.name);
+
+  // Sidebar de puntos de interés (datos reales)
+  $("#poiList").innerHTML = city.places.map((point, i) => `
+    <article class="poi-card" data-poi-index="${i}" style="cursor:pointer">
       <div class="poi-card-top">
         <span class="poi-icon stat-card-icon cyan"><i data-lucide="${point.icon}"></i></span>
         <div class="poi-info">
@@ -376,6 +545,18 @@ function renderMap() {
       <div class="poi-meta"><span class="badge badge-blue">${point.tag}</span></div>
     </article>
   `).join("");
+
+  // Click en tarjeta -> centra el mapa y abre popup
+  $$("#poiList .poi-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const place = city.places[Number(card.dataset.poiIndex)];
+      if (place && tlMap) { tlMap.setView(place.coord, 15); }
+    });
+  });
+
+  renderIcons();
+  // Leaflet necesita recalcular tamaño cuando la sección estaba oculta
+  setTimeout(() => { if (tlMap) tlMap.invalidateSize(); }, 60);
 }
 
 function renderExpenses() {
@@ -423,7 +604,8 @@ function renderRecommendations(type = "food") {
 
 function resetChat() {
   $("#aiMessages").innerHTML = "";
-  addAiMessage("assistant", "Hola, soy tu Travel AI Assistant. Tengo contexto de tu viaje demo: CDMX, partido a las 19:00, clima variable y presupuesto al 68%.");
+  tlChatHistory.length = 0;
+  addAiMessage("assistant", "¡Hola! Soy tu Travel AI. Conozco tu viaje: CDMX, México vs República Checa el 25 jun a las 19:00 en el Estadio Azteca, y tu presupuesto. Pregúntame sobre rutas, clima, seguridad o cómo organizar tu día.");
 }
 
 function addAiMessage(role, text) {
@@ -514,10 +696,77 @@ function bindInteractions() {
   });
 }
 
-function submitAiQuestion(question) {
+/* ============================================================
+   TRAVEL AI — Asistente con IA real (Google Gemini vía proxy)
+   El proxy (Cloudflare Worker) esconde la API key. Si no hay
+   proxy configurado, usa las respuestas locales (aiReply).
+   ============================================================ */
+const tlChatHistory = [];
+
+function aiSystemPrompt() {
+  return [
+    "Eres Travel AI, el asistente de TRAVELIFE 2026, una app de viajes para el Mundial FIFA 2026.",
+    "Respondes en español, claro y breve (máx 5 frases), con tono cercano y práctico de agente de viajes.",
+    "Contexto real del viaje del usuario:",
+    "- Viaje: 20–27 junio 2026, ruta Guadalajara → Ciudad de México.",
+    "- Partido guardado: México vs República Checa, 25 jun 19:00, Estadio Azteca (CDMX).",
+    "- Presupuesto: $4,200 USD total, ~68% usado.",
+    "- Sedes disponibles en la app: CDMX, Los Ángeles, Miami, Nueva York/NJ.",
+    "Si te preguntan por clima o rutas, recuérdales que la app tiene secciones de Clima (datos reales) y Mapa (rutas reales).",
+    "No inventes precios de boletos ni datos que no tengas; sé honesto si no sabes algo."
+  ].join("\n");
+}
+
+function addTypingBubble() {
+  const messages = $("#aiMessages");
+  const row = document.createElement("div");
+  row.className = "ai-message assistant ai-typing";
+  row.id = "aiTyping";
+  row.innerHTML = `<span class="ai-avatar"><i data-lucide="bot"></i></span>
+    <div class="ai-bubble"><span class="ai-dot"></span><span class="ai-dot"></span><span class="ai-dot"></span></div>`;
+  messages.appendChild(row);
+  messages.scrollTop = messages.scrollHeight;
+  renderIcons();
+}
+function removeTypingBubble() {
+  const t = $("#aiTyping");
+  if (t) t.remove();
+}
+
+async function callGeminiProxy(question) {
+  const url = (window.TRAVELIFE_CONFIG && window.TRAVELIFE_CONFIG.AI_PROXY_URL || "").trim();
+  if (!url) return null; // sin proxy -> usar respaldo local
+  const res = await fetch(url.replace(/\/$/, ""), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      system: aiSystemPrompt(),
+      messages: tlChatHistory.slice(-10)
+    })
+  });
+  if (!res.ok) throw new Error("proxy " + res.status);
+  const data = await res.json();
+  return (data.text || "").trim();
+}
+
+async function submitAiQuestion(question) {
   if (!question) return;
   addAiMessage("user", question);
-  window.setTimeout(() => addAiMessage("assistant", aiReply(question)), 250);
+  tlChatHistory.push({ role: "user", text: question });
+
+  addTypingBubble();
+  try {
+    let answer = await callGeminiProxy(question);
+    if (!answer) answer = aiReply(question); // respaldo local si no hay proxy
+    removeTypingBubble();
+    addAiMessage("assistant", answer);
+    tlChatHistory.push({ role: "model", text: answer });
+  } catch (e) {
+    removeTypingBubble();
+    const fallback = aiReply(question);
+    addAiMessage("assistant", fallback + "\n\n(IA en la nube no disponible ahora; respuesta local).");
+    tlChatHistory.push({ role: "model", text: fallback });
+  }
 }
 
 function updateCountdown() {
@@ -550,7 +799,6 @@ function boot() {
   renderSafety();
   renderWeather();
   renderMatches();
-  renderMap();
   renderExpenses();
   renderRecommendations();
   resetChat();
@@ -816,22 +1064,12 @@ document.addEventListener("DOMContentLoaded", boot);
     const edit = $(".profile-edit-btn");
     if (edit) edit.addEventListener("click", () => navigate("settings"));
 
-    // Mapa: pins activos + zoom + ciudad
-    $$(".map-pin").forEach(pin => pin.addEventListener("click", () => {
-      $$(".map-pin").forEach(p => p.classList.remove("is-active"));
-      pin.classList.add("is-active");
-      const label = pin.querySelector(".map-pin-label")?.textContent || "Punto";
-      notify(`Centrando mapa en: ${label}.`, { title: "Mapa", icon: "map-pin", duration: 1800 });
-    }));
-
-    let zoom = 1;
-    const placeholder = $("#screen-map .map-placeholder");
-    const zoomBtns = $$("#screen-map .map-ctrl-btn");
-    if (zoomBtns[0]) zoomBtns[0].addEventListener("click", () => { zoom = Math.min(2, zoom + 0.15); if (placeholder) placeholder.style.transform = `scale(${zoom})`; });
-    if (zoomBtns[1]) zoomBtns[1].addEventListener("click", () => { zoom = Math.max(0.7, zoom - 0.15); if (placeholder) placeholder.style.transform = `scale(${zoom})`; });
-
-    const mapCity = $(".map-city-sel");
-    if (mapCity) mapCity.addEventListener("change", e => notify(`Mapa cambiado a ${e.target.value}.`, { title: "Ciudad", icon: "map", duration: 1600 }));
+    // Mapa real: cambio de ciudad sede -> redibuja mapa, marcadores y ruta real
+    const mapCity = $("#mapCitySel");
+    if (mapCity) mapCity.addEventListener("change", e => {
+      renderMap(e.target.value);
+      notify(`Mapa y ruta cargados para ${e.target.options[e.target.selectedIndex].text}.`, { title: "Ciudad", icon: "map", duration: 1600 });
+    });
 
     // Reservas y documentos: feedback al tocar
     $$("#screen-my-trip .reservation-row").forEach(row => {
