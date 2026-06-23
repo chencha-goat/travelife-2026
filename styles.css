@@ -2304,3 +2304,58 @@ svg { width: 1em; height: 1em; display: block; stroke-width: 2 }
 .tl-marker.user { background:#7C3AED }
 .map-route-banner { flex-wrap:wrap }
 @media (max-width:560px){ #useLocationBtn{ margin-left:0; width:100% } }
+
+/* ============================================================
+   TRAVELIFE 2026 — Buscador de rutas + animaciones mejoradas
+   ============================================================ */
+.map-search { display:flex; align-items:center; gap:8px; margin-bottom:8px;
+  background:var(--card); border:1px solid var(--border); border-radius:var(--rl);
+  padding:8px 12px; box-shadow:var(--shadow-md); transition:border-color .2s, box-shadow .2s }
+.map-search:focus-within { border-color:rgba(29,78,216,.4); box-shadow:0 0 0 4px rgba(29,78,216,.1) }
+.map-search > svg, .map-search > i { width:18px; height:18px; color:var(--muted); flex:0 0 auto }
+.map-search input { flex:1; border:none; outline:none; background:transparent;
+  font-family:var(--font); font-size:14px; color:inherit; min-width:0 }
+.map-search .btn { flex:0 0 auto }
+.map-hint { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); margin:0 0 12px 2px }
+.map-hint svg { width:14px; height:14px; flex:0 0 auto }
+
+/* Transición de pantalla más fluida */
+.screen { animation: tlScreenIn .42s cubic-bezier(.2,.7,.2,1) both }
+@keyframes tlScreenIn { from { opacity:0; transform:translateY(14px) scale(.995) } to { opacity:1; transform:none } }
+
+/* Aparición escalonada de tarjetas */
+@keyframes tlPop { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:none } }
+#dashboardStats .stat-card, #poiList .poi-card, #matchesGrid .match-card,
+#recommendationsGrid .rec-card, #expenseCats .exp-cat-card,
+.dash-grid > *, .safety-grid > *, .premium-features .pf-card { animation: tlPop .5s ease both }
+:is(#dashboardStats .stat-card, #poiList .poi-card, #matchesGrid .match-card, #recommendationsGrid .rec-card, #expenseCats .exp-cat-card, .premium-features .pf-card):nth-child(2){ animation-delay:.06s }
+:is(#dashboardStats .stat-card, #poiList .poi-card, #matchesGrid .match-card, #recommendationsGrid .rec-card, #expenseCats .exp-cat-card, .premium-features .pf-card):nth-child(3){ animation-delay:.12s }
+:is(#dashboardStats .stat-card, #poiList .poi-card, #matchesGrid .match-card, #recommendationsGrid .rec-card, #expenseCats .exp-cat-card, .premium-features .pf-card):nth-child(4){ animation-delay:.18s }
+:is(#matchesGrid .match-card, #recommendationsGrid .rec-card, #poiList .poi-card):nth-child(5){ animation-delay:.24s }
+:is(#matchesGrid .match-card, #recommendationsGrid .rec-card, #poiList .poi-card):nth-child(6){ animation-delay:.3s }
+
+/* Botones e ítems interactivos más vivos */
+.btn { transition: transform .15s ease, box-shadow .2s ease, background .2s ease, filter .2s ease }
+.btn:hover { transform: translateY(-1px) }
+.btn:active { transform: scale(.97) }
+.match-card, .rec-card, .exp-cat-card, .smart-action, .prompt-chip, .pf-card, .feature-pill {
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease }
+.match-card:hover, .rec-card:hover, .pf-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg) }
+.smart-action:hover, .prompt-chip:hover, .feature-pill:hover { transform: translateY(-1px) }
+.nav-item { transition: background .2s ease, color .2s ease, transform .12s ease }
+.nav-item:hover { transform: translateX(2px) }
+
+/* Marcadores del mapa: caída suave al aparecer */
+.tl-marker { animation: tlDrop .45s cubic-bezier(.2,.85,.3,1) both }
+@keyframes tlDrop { 0% { opacity:0; transform:rotate(-45deg) translateY(-16px) } 100% { opacity:1; transform:rotate(-45deg) translateY(0) } }
+.tl-marker.user { animation: tlPulseUser 1.8s ease-in-out infinite }
+@keyframes tlPulseUser { 0%,100% { box-shadow:0 4px 10px rgba(0,0,0,.35), 0 0 0 0 rgba(124,58,237,.5) } 50% { box-shadow:0 4px 10px rgba(0,0,0,.35), 0 0 0 10px rgba(124,58,237,0) } }
+
+/* Ruta: aparece con un fundido suave */
+.tl-route-anim { animation: tlRouteIn .7s ease both }
+@keyframes tlRouteIn { from { opacity:0 } to { opacity:.9 } }
+
+/* Respeta a quien prefiere menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important }
+}

@@ -439,6 +439,12 @@
             <div class="map-route-info" id="mapRouteInfo">Calculando ruta real al estadio…</div>
             <button class="btn btn-dark btn-sm" id="useLocationBtn" type="button"><i data-lucide="locate-fixed"></i>Usar mi ubicación</button>
           </div>
+          <div class="map-search">
+            <i data-lucide="search"></i>
+            <input id="mapSearchInput" type="text" autocomplete="off" placeholder="Busca un lugar (ej. Coyoacán, un hotel, un restaurante) y traza la ruta…">
+            <button class="btn btn-primary btn-sm" id="mapSearchBtn" type="button"><i data-lucide="route"></i>Trazar</button>
+          </div>
+          <div class="map-hint"><i data-lucide="hand-pointer"></i> Tip: toca cualquier punto del mapa para trazar la ruta hasta el estadio.</div>
           <div class="map-layout">
             <div class="map-container">
               <div id="leafletMap" class="leaflet-map"></div>

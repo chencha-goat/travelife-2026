@@ -724,6 +724,40 @@ function haversineKm(a, b) {
 let tlUserMarker = null;
 let tlUserRoute = null;
 
+/* Traza una ruta real (OSRM) desde un punto cualquiera hasta el estadio
+   de la ciudad activa. Reutilizado por: GPS, clic en el mapa y búsqueda. */
+async function routeToStadium(fromCoord, label) {
+  if (!tlMap) renderMap(tlCurrentCity);
+  const banner = $("#mapRouteInfo");
+  const city = HOST_CITIES[tlCurrentCity];
+  const stadium = city.places.find(p => p.type === "stadium");
+
+  if (tlUserMarker) tlLayers.removeLayer(tlUserMarker);
+  tlUserMarker = L.marker(fromCoord, { icon: makeUserIcon() }).addTo(tlLayers)
+    .bindPopup(`<strong>${label}</strong>`).openPopup();
+  renderIcons();
+
+  const straight = haversineKm(fromCoord, stadium.coord).toFixed(0);
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${fromCoord[1]},${fromCoord[0]};${stadium.coord[1]},${stadium.coord[0]}?overview=full&geometries=geojson`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const route = data.routes && data.routes[0];
+    if (!route) throw new Error("sin ruta");
+    const line = route.geometry.coordinates.map(c => [c[1], c[0]]);
+    if (tlUserRoute) tlLayers.removeLayer(tlUserRoute);
+    tlUserRoute = L.polyline(line, { color: "#7C3AED", weight: 5, opacity: 0.9, className: "tl-route-anim" }).addTo(tlLayers);
+    const km = (route.distance / 1000).toFixed(1);
+    const min = Math.round(route.duration / 60);
+    if (banner) banner.innerHTML = `<strong>${label} → ${stadium.name}</strong> · <b>${km} km</b> · ~<b>${min} min</b> en auto (ruta real)`;
+    tlMap.fitBounds(tlUserRoute.getBounds().pad(0.2));
+  } catch (e) {
+    if (banner) banner.innerHTML = `<strong>${label} → ${stadium.name}</strong> · ~<b>${straight} km</b> en línea recta.`;
+    tlMap.setView(fromCoord, 12);
+  }
+  return straight;
+}
+
 /* Geolocalización REAL: ubica al usuario y traza la ruta a su estadio */
 function locateUser() {
   if (!navigator.geolocation) {
@@ -733,40 +767,30 @@ function locateUser() {
   tlToast("Obteniendo tu ubicación…", { icon: "locate", duration: 1600 });
   navigator.geolocation.getCurrentPosition(async pos => {
     const me = [pos.coords.latitude, pos.coords.longitude];
-    if (!tlMap) renderMap(tlCurrentCity);
-    const banner = $("#mapRouteInfo");
-
-    if (tlUserMarker) tlLayers.removeLayer(tlUserMarker);
-    tlUserMarker = L.marker(me, { icon: makeUserIcon() }).addTo(tlLayers)
-      .bindPopup("<strong>Estás aquí</strong>").openPopup();
-    renderIcons();
-
-    const city = HOST_CITIES[tlCurrentCity];
-    const stadium = city.places.find(p => p.type === "stadium");
-    const straight = haversineKm(me, stadium.coord).toFixed(0);
-
-    try {
-      const url = `https://router.project-osrm.org/route/v1/driving/${me[1]},${me[0]};${stadium.coord[1]},${stadium.coord[0]}?overview=full&geometries=geojson`;
-      const res = await fetch(url);
-      const data = await res.json();
-      const route = data.routes && data.routes[0];
-      if (!route) throw new Error("sin ruta");
-      const line = route.geometry.coordinates.map(c => [c[1], c[0]]);
-      if (tlUserRoute) tlLayers.removeLayer(tlUserRoute);
-      tlUserRoute = L.polyline(line, { color: "#7C3AED", weight: 5, opacity: 0.9 }).addTo(tlLayers);
-      const km = (route.distance / 1000).toFixed(1);
-      const min = Math.round(route.duration / 60);
-      if (banner) banner.innerHTML = `<strong>Tú → ${stadium.name}</strong> · <b>${km} km</b> · ~<b>${min} min</b> en auto (desde tu ubicación real)`;
-      tlMap.fitBounds(tlUserRoute.getBounds().pad(0.2));
-    } catch (e) {
-      if (banner) banner.innerHTML = `<strong>Tú → ${stadium.name}</strong> · ~<b>${straight} km</b> en línea recta.`;
-      tlMap.setView(me, 11);
-    }
+    const stadium = HOST_CITIES[tlCurrentCity].places.find(p => p.type === "stadium");
+    const straight = await routeToStadium(me, "Estás aquí");
     tlToast(`Estás a ~${straight} km del ${stadium.name}.`, { title: "Ubicación lista", icon: "map-pin", duration: 2800 });
   }, err => {
     const msg = err.code === 1 ? "Permiso de ubicación denegado. Actívalo para usar esta función." : "No se pudo obtener tu ubicación.";
     tlToast(msg, { icon: "map-pin", tone: "danger", duration: 3000 });
   }, { enableHighAccuracy: true, timeout: 10000 });
+}
+
+/* Búsqueda de lugar por nombre (Nominatim/OpenStreetMap, gratis sin key) */
+async function searchAndRoute(query) {
+  const q = (query || "").trim();
+  if (!q) return;
+  tlToast("Buscando lugar…", { icon: "search", duration: 1400 });
+  try {
+    const cityName = HOST_CITIES[tlCurrentCity].name;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q + ", " + cityName)}`;
+    const res = await fetch(url, { headers: { "Accept": "application/json" } });
+    const arr = await res.json();
+    if (!arr || !arr.length) { tlToast("No encontré ese lugar. Prueba con otro nombre.", { icon: "map-pin", tone: "danger" }); return; }
+    await routeToStadium([parseFloat(arr[0].lat), parseFloat(arr[0].lon)], q);
+  } catch (e) {
+    tlToast("No se pudo buscar el lugar.", { icon: "map-pin", tone: "danger" });
+  }
 }
 
 async function drawRealRoute(from, to, stadiumName) {
@@ -778,7 +802,7 @@ async function drawRealRoute(from, to, stadiumName) {
     const route = data.routes && data.routes[0];
     if (!route) throw new Error("sin ruta");
     const line = route.geometry.coordinates.map(c => [c[1], c[0]]);
-    const poly = L.polyline(line, { color: "#22D3EE", weight: 5, opacity: 0.9 }).addTo(tlLayers);
+    const poly = L.polyline(line, { color: "#22D3EE", weight: 5, opacity: 0.9, className: "tl-route-anim" }).addTo(tlLayers);
     L.polyline(line, { color: "#0A1628", weight: 9, opacity: 0.25 }).addTo(tlLayers).bringToBack();
     const km = (route.distance / 1000).toFixed(1);
     const min = Math.round(route.duration / 60);
@@ -803,6 +827,9 @@ function renderMap(cityId = tlCurrentCity) {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(tlMap);
     tlLayers = L.layerGroup().addTo(tlMap);
+
+    // Tocar/clic en el mapa -> traza la ruta desde ese punto al estadio
+    tlMap.on("click", e => routeToStadium([e.latlng.lat, e.latlng.lng], "Tu punto"));
   } else {
     tlLayers.clearLayers();
     tlMap.setView(city.center, city.zoom);
@@ -981,6 +1008,13 @@ function bindInteractions() {
 
   const locBtn = $("#useLocationBtn");
   if (locBtn) locBtn.addEventListener("click", locateUser);
+
+  const searchBtn = $("#mapSearchBtn");
+  const searchInput = $("#mapSearchInput");
+  if (searchBtn) searchBtn.addEventListener("click", () => searchAndRoute(searchInput.value));
+  if (searchInput) searchInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); searchAndRoute(searchInput.value); }
+  });
 
   $$(".tab-btn").forEach(tab => {
     tab.addEventListener("click", () => {
