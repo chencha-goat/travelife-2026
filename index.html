@@ -150,7 +150,7 @@
               </div>
               <div class="landing-proof">
                 <div>
-                  <strong>8</strong>
+                  <strong id="landingDays">8</strong>
                   <span>dias cubiertos</span>
                 </div>
                 <div>
@@ -203,14 +203,14 @@
             <div class="match-hero-top">
               <div>
                 <div class="match-hero-label">Siguiente evento guardado</div>
-                <div class="match-hero-badge">Grupo A</div>
+                <div class="match-hero-badge" id="mhGroup">Grupo A</div>
               </div>
-              <span class="badge badge-white">Ciudad de Mexico</span>
+              <span class="badge badge-white" id="mhCity">Ciudad de Mexico</span>
             </div>
             <div class="match-teams">
               <div class="match-team">
-                <div class="match-flag">MX</div>
-                <div class="match-tname">Mexico</div>
+                <div class="match-flag" id="mhHomeFlag">MX</div>
+                <div class="match-tname" id="mhHomeName">Mexico</div>
                 <div class="match-tsub">Local</div>
               </div>
               <div class="match-vs">
@@ -218,15 +218,15 @@
                 <div class="match-countdown" id="countdown"></div>
               </div>
               <div class="match-team">
-                <div class="match-flag">CZ</div>
-                <div class="match-tname">República Checa</div>
+                <div class="match-flag" id="mhAwayFlag">CZ</div>
+                <div class="match-tname" id="mhAwayName">República Checa</div>
                 <div class="match-tsub">Visitante</div>
               </div>
             </div>
             <div class="match-hero-footer">
-              <div class="match-info-item"><i data-lucide="map-pin"></i> Estadio Azteca</div>
-              <div class="match-info-item"><i data-lucide="clock"></i> 19:00</div>
-              <div class="match-info-item"><i data-lucide="ticket"></i> 2 boletos</div>
+              <div class="match-info-item"><i data-lucide="map-pin"></i> <span id="mhVenue">Estadio Azteca</span></div>
+              <div class="match-info-item"><i data-lucide="clock"></i> <span id="mhTime">19:00</span></div>
+              <div class="match-info-item"><i data-lucide="ticket"></i> <span id="mhTickets">2 boletos</span></div>
             </div>
           </div>
 
@@ -321,9 +321,9 @@
           </div>
           <div class="trip-hero">
             <div>
-              <span class="badge badge-white">20-27 junio 2026</span>
-              <h2>Guadalajara y Ciudad de México</h2>
-              <p>Ruta premium Guadalajara–CDMX con vuelo, hotel, el partido y ventanas de descanso.</p>
+              <span class="badge badge-white" id="tripDates">20-27 junio 2026</span>
+              <h2 id="tripCities">Guadalajara y Ciudad de México</h2>
+              <p id="tripDesc">Ruta premium Guadalajara–CDMX con vuelo, hotel, el partido y ventanas de descanso.</p>
             </div>
             <div class="trip-score">
               <strong>98%</strong>

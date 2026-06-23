@@ -195,8 +195,10 @@ const TRIP = {
   hotel: "Zona Paseo de la Reforma, CDMX",
   match: {
     home: "México", away: "República Checa", group: "Grupo A",
+    homeCode: "MX", awayCode: "CZ",
     date: "25 de junio de 2026", time: "19:00",
-    venue: "Estadio Azteca", tickets: 2
+    datetimeISO: "2026-06-25T19:00:00-06:00",
+    city: "Ciudad de México", venue: "Estadio Azteca", tickets: 2
   },
   budget: {
     total: 4200, used: 2840, currency: "USD",
@@ -978,7 +980,7 @@ async function submitAiQuestion(question) {
 }
 
 function updateCountdown() {
-  const target = new Date("2026-06-25T19:00:00-06:00").getTime();
+  const target = new Date(TRIP.match.datetimeISO).getTime();
   const now = Date.now();
   const distance = Math.max(0, target - now);
   const days = Math.floor(distance / 86400000);
@@ -1000,8 +1002,53 @@ function updateCountdown() {
   `).join('<span class="cd-sep">:</span>');
 }
 
+function tripMatchDateShort() {
+  try {
+    return new Date(TRIP.match.datetimeISO).toLocaleDateString("es-MX", { day: "numeric", month: "short" }).replace(".", "");
+  } catch (e) { return TRIP.match.date; }
+}
+
+/* Vuelca la fuente de la verdad TRIP a TODO el contenido visible.
+   Cambia TRIP y, al recargar, dashboard + partidos + itinerario + headers
+   se actualizan juntos. */
+function applyTripToContent() {
+  const m = TRIP.match;
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+  // 1) Dashboard: tarjeta del partido
+  set("mhGroup", m.group);
+  set("mhCity", m.city);
+  set("mhHomeFlag", m.homeCode);
+  set("mhHomeName", m.home);
+  set("mhAwayFlag", m.awayCode);
+  set("mhAwayName", m.away);
+  set("mhVenue", m.venue);
+  set("mhTime", m.time);
+  set("mhTickets", `${m.tickets} boletos`);
+
+  // 2) Encabezado del viaje + portada
+  set("tripDates", TRIP.dates);
+  set("tripCities", `${TRIP.homeCity} y ${TRIP.hostCity}`);
+  set("tripDesc", `Ruta ${TRIP.homeCity}–${TRIP.hostCity} con vuelo, hotel, el partido y ventanas de descanso.`);
+  set("landingDays", TRIP.days);
+
+  // 3) El partido guardado de la lista = el del TRIP
+  mock.matches[0] = { group: m.group, a: m.home, b: m.away, date: tripMatchDateShort(), city: m.city, saved: true };
+
+  // 4) Itinerario: el evento "partido" se llena desde TRIP
+  const matchStop = mock.itinerary.find(s => s.items.some(i => i.icon === "ticket"));
+  if (matchStop) {
+    const matchItem = matchStop.items.find(i => i.icon === "ticket");
+    if (matchItem) {
+      matchItem.title = `${m.home} vs ${m.away}`;
+      matchItem.meta = `${m.venue} · ${m.time}`;
+    }
+  }
+}
+
 function boot() {
   bindNavigation();
+  applyTripToContent();
   renderDashboard();
   renderTrip();
   renderSafety();
