@@ -238,9 +238,9 @@
                 <h3 class="budget-title">Presupuesto del viaje</h3>
                 <span class="badge badge-green">En rango</span>
               </div>
-              <div class="budget-amounts"><span>Usado <strong>$2,840</strong></span><span>Total <strong>$4,200</strong></span></div>
-              <div class="budget-bar"><div class="budget-fill" style="width:68%"></div></div>
-              <div class="budget-pct">68% utilizado</div>
+              <div class="budget-amounts"><span><span data-i18n>Usado</span> <strong id="budgetUsed">$2,840</strong></span><span><span data-i18n>Total</span> <strong id="budgetTotal">$4,200</strong></span></div>
+              <div class="budget-bar"><div class="budget-fill" id="budgetFill" style="width:68%"></div></div>
+              <div class="budget-pct"><span id="budgetPct">68%</span> <span data-i18n>utilizado</span></div>
               <div class="budget-cats">
                 <span class="bcat"><span class="bcat-dot" style="background:#1D4ED8"></span>Hotel</span>
                 <span class="bcat"><span class="bcat-dot" style="background:#06B6D4"></span>Transporte</span>
@@ -460,14 +460,14 @@
           <div class="expense-hero">
             <div class="expense-hero-top">
               <div>
-                <div class="expense-total-label">Total gastado</div>
-                <div class="expense-total-amt">$2,840</div>
-                <div class="expense-total-budget">de $4,200 presupuestados</div>
+                <div class="expense-total-label" data-i18n>Total gastado</div>
+                <div class="expense-total-amt" id="expTotalAmt">$2,840</div>
+                <div class="expense-total-budget" id="expTotalBudget">de $4,200 presupuestados</div>
               </div>
               <button class="btn btn-dark" type="button"><i data-lucide="plus"></i>Gasto</button>
             </div>
-            <div class="expense-bar"><div class="expense-bar-fill" style="width:68%"></div></div>
-            <div class="expense-bar-pct">Te quedan $1,360 disponibles</div>
+            <div class="expense-bar"><div class="expense-bar-fill" id="expBarFill" style="width:68%"></div></div>
+            <div class="expense-bar-pct" id="expBarPct">Te quedan $1,360 disponibles</div>
           </div>
           <div class="expense-cats" id="expenseCats"></div>
           <div class="transaction-list">
@@ -494,7 +494,7 @@
             <div class="premium-hero-tag"><i data-lucide="crown"></i> TRAVELIFE Premium</div>
             <h1 class="premium-hero-title">Viaja como si tuvieras un equipo contigo.</h1>
             <p class="premium-hero-sub">AI contextual, alertas proactivas, concierge y rutas optimizadas.</p>
-            <div class="premium-price"><span class="premium-price-big">$19</span><sub>/mes</sub></div>
+            <div class="premium-price"><span class="premium-price-big" id="premiumPrice" data-usd="19">$19</span><sub>/mes</sub></div>
             <div class="premium-price-sub">Sin cargos por ahora</div>
           </div>
           <div class="premium-features">
@@ -540,8 +540,8 @@
           </div>
           <div class="settings-section">
             <div class="settings-section-title">Preferencias</div>
-            <div class="settings-row"><div class="settings-row-left"><span class="settings-row-icon"><i data-lucide="languages"></i></span><div><div class="settings-row-label">Idioma</div><div class="settings-row-sub">Interfaz principal</div></div></div><select class="settings-select"><option>Español</option><option>English</option></select></div>
-            <div class="settings-row"><div class="settings-row-left"><span class="settings-row-icon"><i data-lucide="circle-dollar-sign"></i></span><div><div class="settings-row-label">Moneda</div><div class="settings-row-sub">Presupuesto y gastos</div></div></div><select class="settings-select"><option>USD</option><option>MXN</option></select></div>
+            <div class="settings-row"><div class="settings-row-left"><span class="settings-row-icon"><i data-lucide="languages"></i></span><div><div class="settings-row-label">Idioma</div><div class="settings-row-sub">Interfaz principal</div></div></div><select class="settings-select" id="langSelect"><option value="es">Español</option><option value="en">English</option></select></div>
+            <div class="settings-row"><div class="settings-row-left"><span class="settings-row-icon"><i data-lucide="circle-dollar-sign"></i></span><div><div class="settings-row-label">Moneda</div><div class="settings-row-sub">Presupuesto y gastos</div></div></div><select class="settings-select" id="currencySelect"><option value="USD">USD</option><option value="MXN">MXN</option></select></div>
           </div>
         </section>
       </div>

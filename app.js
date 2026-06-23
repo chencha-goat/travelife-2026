@@ -212,6 +212,161 @@ const TRIP = {
 /* Contexto en vivo que se inyecta a la IA (clima real actualizado). */
 const tlLiveContext = { weather: null };
 
+/* ============================================================
+   IDIOMA + MONEDA + PRESUPUESTO (interactivos)
+   ============================================================ */
+let tlLang = "es";
+let tlCurrency = "USD";
+let tlRate = 18.0; // MXN por USD; se actualiza con tipo de cambio real
+
+/* --- Moneda --- */
+function formatMoney(usd) {
+  const n = Number(usd) || 0;
+  if (tlCurrency === "MXN") {
+    return "$" + Math.round(n * tlRate).toLocaleString("es-MX") + " MXN";
+  }
+  return "$" + Math.round(n).toLocaleString("en-US");
+}
+
+async function loadExchangeRate() {
+  try {
+    const res = await fetch("https://open.er-api.com/v6/latest/USD");
+    const data = await res.json();
+    if (data && data.rates && data.rates.MXN) tlRate = data.rates.MXN;
+  } catch (e) { /* deja el tipo de cambio por defecto */ }
+}
+
+/* --- Presupuesto: el "usado" = suma de categorías --- */
+function budgetUsedUSD() {
+  return mock.expenses.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+}
+
+function updateBudgetUI() {
+  const total = TRIP.budget.total;
+  const used = budgetUsedUSD();
+  const remaining = Math.max(0, total - used);
+  const pct = Math.min(100, Math.round((used / total) * 100));
+
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const width = (id, p) => { const el = document.getElementById(id); if (el) el.style.width = p + "%"; };
+
+  // Tarjeta de presupuesto del dashboard
+  set("budgetUsed", formatMoney(used));
+  set("budgetTotal", formatMoney(total));
+  set("budgetPct", pct + "%");
+  width("budgetFill", pct);
+
+  // Hero de Gastos
+  set("expTotalAmt", formatMoney(used));
+  set("expTotalBudget", `${tr("de")} ${formatMoney(total)} ${tr("presupuestados")}`);
+  set("expBarPct", `${tr("Te quedan")} ${formatMoney(remaining)} ${tr("disponibles")}`);
+  width("expBarFill", pct);
+}
+
+function updatePremiumPrice() {
+  const el = document.getElementById("premiumPrice");
+  if (el) el.textContent = formatMoney(Number(el.dataset.usd) || 0);
+}
+
+function setCurrency(cur) {
+  tlCurrency = cur === "MXN" ? "MXN" : "USD";
+  renderExpenses();      // re-formatea categorías y transacciones
+  updateBudgetUI();
+  updatePremiumPrice();
+}
+
+/* --- Idioma (traducción de la interfaz visible) --- */
+const DICT_EN = {
+  // Navegación
+  "Landing": "Landing", "Inicio": "Home", "Travel AI": "Travel AI", "Mi Viaje": "My Trip",
+  "Partidos": "Matches", "Mapa": "Map", "Gastos": "Expenses", "Safety Center": "Safety Center",
+  "Weather Center": "Weather Center", "Recomendaciones": "Recommendations", "Premium": "Premium",
+  "Perfil": "Profile", "Configuracion": "Settings", "Configuración": "Settings",
+  "Viaje": "Trip", "Centros": "Centers", "Cuenta": "Account",
+  "Home": "Home", "Safety": "Safety", "Clima": "Weather", "AI": "AI",
+  // Topbar (data-title)
+  "Landing Premium": "Premium Landing", "Travel AI Assistant": "Travel AI Assistant",
+  // Botones
+  "Ver Mi Viaje": "View My Trip", "Planear con AI": "Plan with AI", "Abrir asistente": "Open assistant",
+  "Revisar itinerario": "Review itinerary", "Agregar evento": "Add event", "Emergencia": "Emergency",
+  "Subir": "Upload", "Activar Premium": "Activate Premium", "Editar": "Edit", "Limpiar": "Clear",
+  "Gasto": "Expense", "Agregar al itinerario": "Add to itinerary", "Registrar gasto": "Save expense",
+  "Guardar documento": "Save document", "Cancelar": "Cancel", "Guardar": "Save",
+  // Títulos y subtítulos
+  "Todo lo importante, antes de que lo necesites.": "Everything that matters, before you need it.",
+  "Pregunta antes de moverte.": "Ask before you move.",
+  "Travel AI Assistant": "Travel AI Assistant",
+  "Resumen ejecutivo de tu viaje de Guadalajara a Ciudad de México.": "Executive summary of your trip from Guadalajara to Mexico City.",
+  "Agenda de hoy": "Today's agenda", "Presupuesto del viaje": "Trip budget", "En rango": "On track",
+  "Contexto activo": "Active context", "Acciones inteligentes": "Smart actions",
+  "Optimizar mi dia": "Optimize my day", "Plan B por lluvia": "Rain plan B", "Revisar presupuesto": "Review budget",
+  "Itinerario con reservas, traslados, partidos y tareas clave.": "Itinerary with bookings, transfers, matches and key tasks.",
+  "Checklist": "Checklist", "Reservas": "Reservations",
+  "Recomendacion AI": "AI recommendation", "Forecast 5 dias": "5-day forecast",
+  "Mapa real con rutas al estadio, hoteles y fan zones de las sedes del Mundial 2026.":
+    "Real map with routes to the stadium, hotels and fan zones of the 2026 World Cup host cities.",
+  "Clima real (Open-Meteo) por ciudad sede, recomendaciones de outfit y alertas de partido.":
+    "Real weather (Open-Meteo) by host city, outfit tips and match alerts.",
+  "Asistente con IA real (Google Gemini) para responder sobre agenda, rutas, clima, presupuesto y seguridad.":
+    "Real AI assistant (Google Gemini) for your agenda, routes, weather, budget and safety.",
+  // Gastos
+  "Total gastado": "Total spent", "Usado": "Used", "Total": "Total", "utilizado": "used",
+  "Te quedan": "You have", "disponibles": "available", "de": "of", "presupuestados": "budgeted",
+  "Transacciones recientes": "Recent transactions",
+  // Configuración
+  "Notificaciones": "Notifications", "Alertas de viaje": "Trip alerts",
+  "Clima, seguridad y cambios de agenda": "Weather, safety and schedule changes",
+  "Recordatorios de partido": "Match reminders", "Avisos antes de salir al estadio": "Reminders before heading to the stadium",
+  "Preferencias": "Preferences", "Idioma": "Language", "Interfaz principal": "Main interface",
+  "Moneda": "Currency", "Presupuesto y gastos": "Budget and expenses",
+  // Otros
+  "Alertas activas": "Active alerts", "Contactos rapidos": "Quick contacts",
+  "Documentos y cobertura": "Documents and coverage", "Datos": "Details", "Plan": "Plan",
+  "Ciudad base": "Home city", "Activar Premium": "Activate Premium"
+};
+
+function tr(text) {
+  const s = (text || "").trim();
+  if (tlLang !== "en") return text;
+  return DICT_EN[s] || text;
+}
+
+function applyLanguage(lang) {
+  tlLang = lang === "en" ? "en" : "es";
+  document.documentElement.lang = tlLang;
+  const selector = [
+    ".nav-label", ".nav-section-label", ".bn-label",
+    ".page-title", ".page-sub", ".section-title", ".section-kicker",
+    ".small-title", ".btn", ".budget-title", ".match-hero-label",
+    ".card-head h3", ".ai-mini-panel h3", ".ai-mini-panel p", ".smart-action span",
+    ".settings-section-title", ".settings-row-label", ".settings-row-sub",
+    "[data-i18n]", ".profile-section-title", ".txn-header h3"
+  ].join(",");
+
+  $$(selector).forEach(el => {
+    el.childNodes.forEach(node => {
+      if (node.nodeType !== Node.TEXT_NODE) return;
+      const raw = node.nodeValue;
+      const trimmed = raw.trim();
+      if (!trimmed) return;
+      if (node.__esText === undefined) node.__esText = trimmed; // guarda original ES
+      const translated = tlLang === "en" ? (DICT_EN[node.__esText] || node.__esText) : node.__esText;
+      node.nodeValue = raw.replace(trimmed, translated);
+    });
+  });
+
+  // Título del topbar (se setea por JS al navegar)
+  const active = $(".screen.active");
+  if (active) $("#topbarTitle").textContent = tr(active.dataset.title || "TRAVELIFE");
+  updateBudgetUI(); // re-traduce las etiquetas de dinero
+}
+
+function setLanguage(lang) {
+  applyLanguage(lang);
+  notifyLangCurrency();
+}
+function notifyLangCurrency() { /* placeholder, evita errores si se llama temprano */ }
+
 function renderIcons() {
   if (window.lucide) {
     window.lucide.createIcons({ attrs: { "stroke-width": 2 } });
@@ -227,7 +382,7 @@ function navigate(screenId, updateHash = true) {
     item.classList.toggle("active", item.dataset.screenTarget === screenId);
   });
 
-  $("#topbarTitle").textContent = screen.dataset.title || "TRAVELIFE";
+  $("#topbarTitle").textContent = tr(screen.dataset.title || "TRAVELIFE");
   $("#sidebar").classList.remove("mobile-open");
   $("#sidebarOverlay").classList.remove("open");
 
@@ -605,7 +760,7 @@ function renderExpenses() {
     <article class="exp-cat-card">
       <div class="exp-cat-icon"><i data-lucide="${cat.icon}"></i></div>
       <div class="exp-cat-name">${cat.name}</div>
-      <div class="exp-cat-amt">$${cat.amount.toLocaleString()}</div>
+      <div class="exp-cat-amt">${formatMoney(cat.amount)}</div>
       <div class="exp-cat-bar"><div class="exp-cat-bar-fill" style="width:${cat.pct}%;background:${cat.color}"></div></div>
     </article>
   `).join("");
@@ -617,9 +772,12 @@ function renderExpenses() {
         <div class="txn-name">${txn.name}</div>
         <div class="txn-meta">${txn.meta}</div>
       </div>
-      <div class="txn-amt ${txn.amount > 0 ? "income" : ""}">${txn.amount > 0 ? "+" : "-"}$${Math.abs(txn.amount)}</div>
+      <div class="txn-amt ${txn.amount > 0 ? "income" : ""}">${txn.amount > 0 ? "+" : "-"}${formatMoney(Math.abs(txn.amount))}</div>
     </div>
   `).join("");
+
+  updateBudgetUI();
+  renderIcons();
 }
 
 function renderRecommendations(type = "food") {
@@ -859,6 +1017,11 @@ function boot() {
   const initial = window.location.hash.replace("#", "") || "landing";
   navigate(initial, false);
   renderIcons();
+
+  // Idioma y moneda: prepara el sistema y trae el tipo de cambio real
+  applyLanguage("es");
+  updatePremiumPrice();
+  loadExchangeRate();
 }
 
 document.addEventListener("DOMContentLoaded", boot);
@@ -987,16 +1150,35 @@ document.addEventListener("DOMContentLoaded", boot);
 
   function addExpense(data) {
     const amount = Math.abs(parseFloat(data.amount)) || 0;
+    const cat = data.category || "Otros";
     const iconByCat = { Hotel: "hotel", Comida: "utensils", Transporte: "car", Tickets: "ticket", Otros: "circle-dollar-sign" };
+    const colorByCat = { Hotel: "#1D4ED8", Vuelos: "#06B6D4", Transporte: "#06B6D4", Comida: "#22C55E", Tickets: "#F59E0B", Otros: "#94A3B8" };
+
+    // 1) Registrar la transacción (en USD internamente)
     mock.transactions.unshift({
-      icon: iconByCat[data.category] || "circle-dollar-sign",
+      icon: iconByCat[cat] || "circle-dollar-sign",
       name: data.name || "Gasto sin nombre",
-      meta: `${data.category || "Otros"} · hoy`,
+      meta: `${cat} · hoy`,
       amount: -amount
     });
+
+    // 2) Sumar a la categoría -> esto sube el "usado" y baja lo disponible
+    let target = mock.expenses.find(c => c.name.toLowerCase() === cat.toLowerCase());
+    if (!target) {
+      target = { icon: iconByCat[cat] || "circle-dollar-sign", name: cat, amount: 0, color: colorByCat[cat] || "#94A3B8", pct: 50 };
+      mock.expenses.push(target);
+    }
+    target.amount += amount;
+
+    // 3) Recalcular barras de categoría (proporcional a la mayor)
+    const maxCat = Math.max(...mock.expenses.map(c => c.amount), 1);
+    mock.expenses.forEach(c => { c.pct = Math.max(8, Math.round((c.amount / maxCat) * 100)); });
+
+    // 4) Re-render (gastos + presupuesto del dashboard) y avisar
     renderExpenses();
-    renderIcons();
-    notify(`Gasto de $${amount} registrado en ${data.category || "Otros"}.`, { title: "Gasto agregado", icon: "wallet-cards" });
+    applyLanguage(tlLang);
+    const remaining = Math.max(0, TRIP.budget.total - budgetUsedUSD());
+    notify(`${tr("Gasto")} ${formatMoney(amount)} · ${tr("Te quedan")} ${formatMoney(remaining)}.`, { title: tr("Gasto"), icon: "wallet-cards" });
   }
 
   /* ---- Panel de notificaciones (campana) ---- */
@@ -1137,9 +1319,21 @@ document.addEventListener("DOMContentLoaded", boot);
       });
     });
 
-    // Configuracion: selects con feedback
-    $$("#screen-settings .settings-select").forEach(sel => {
-      sel.addEventListener("change", e => notify(`Preferencia actualizada: ${e.target.value}.`, { icon: "settings", duration: 1600 }));
+    // Configuracion: Idioma (traduce la interfaz)
+    const langSel = $("#langSelect");
+    if (langSel) langSel.addEventListener("change", e => {
+      applyLanguage(e.target.value);
+      notify(e.target.value === "en" ? "Language changed to English." : "Idioma cambiado a Español.", { icon: "languages", duration: 1800 });
+    });
+
+    // Configuracion: Moneda (convierte todos los montos con tipo de cambio real)
+    const curSel = $("#currencySelect");
+    if (curSel) curSel.addEventListener("change", e => {
+      setCurrency(e.target.value);
+      const msg = e.target.value === "MXN"
+        ? `${tr("Moneda")}: MXN (1 USD ≈ ${tlRate.toFixed(2)} MXN).`
+        : `${tr("Moneda")}: USD.`;
+      notify(msg, { icon: "circle-dollar-sign", duration: 2200 });
     });
   }
 
