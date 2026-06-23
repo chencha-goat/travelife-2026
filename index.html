@@ -191,7 +191,7 @@
         <section class="screen" id="screen-dashboard" data-title="Inicio">
           <div class="page-header">
             <h1 class="page-title">Inicio <span class="gradient-text">TRAVELIFE</span></h1>
-            <p class="page-sub">Resumen ejecutivo de tu viaje demo de Guadalajara a Ciudad de México.</p>
+            <p class="page-sub">Resumen ejecutivo de tu viaje de Guadalajara a Ciudad de México.</p>
             <div class="page-actions">
               <button class="btn btn-primary" type="button" data-screen-target="my-trip"><i data-lucide="calendar-check"></i>Revisar itinerario</button>
               <button class="btn btn-ghost" type="button" data-screen-target="weather"><i data-lucide="cloud-sun"></i>Clima</button>
@@ -288,7 +288,7 @@
                 <div class="context-list">
                   <div><i data-lucide="map-pin"></i><span>Ciudad actual</span><strong>CDMX</strong></div>
                   <div><i data-lucide="ticket"></i><span>Siguiente partido</span><strong>19:00</strong></div>
-                  <div><i data-lucide="cloud-rain"></i><span>Riesgo lluvia</span><strong>42%</strong></div>
+                  <div><i data-lucide="cloud-rain"></i><span>Riesgo lluvia</span><strong id="ctxRain">—</strong></div>
                   <div><i data-lucide="shield-check"></i><span>Zona</span><strong>Verde</strong></div>
                 </div>
               </article>
@@ -315,7 +315,7 @@
           <div class="page-header trip-header">
             <div>
               <h1 class="page-title">Mi Viaje</h1>
-              <p class="page-sub">Itinerario demo con reservas, traslados, partidos y tareas clave.</p>
+              <p class="page-sub">Itinerario con reservas, traslados, partidos y tareas clave.</p>
             </div>
             <button class="btn btn-primary" type="button"><i data-lucide="plus"></i>Agregar evento</button>
           </div>
@@ -353,13 +353,13 @@
         <section class="screen" id="screen-safety" data-title="Safety Center">
           <div class="page-header compact-header">
             <h1 class="page-title">Safety Center</h1>
-            <p class="page-sub">Alertas, contactos, documentos y recomendaciones mock por ciudad.</p>
+            <p class="page-sub">Alertas, contactos, documentos y recomendaciones por ciudad.</p>
           </div>
           <div class="safety-hero">
             <div>
               <span class="badge badge-green">Nivel verde</span>
               <h2>Tu zona actual esta estable</h2>
-              <p>Ultima revision demo: movilidad normal, alta afluencia cerca del estadio desde las 16:00.</p>
+              <p>Última revisión: movilidad normal, alta afluencia cerca del estadio desde las 16:00.</p>
             </div>
             <button class="btn btn-dark" type="button"><i data-lucide="phone-call"></i>Emergencia</button>
           </div>
@@ -424,7 +424,7 @@
         <section class="screen" id="screen-matches" data-title="Partidos">
           <div class="page-header">
             <h1 class="page-title">Partidos</h1>
-            <p class="page-sub">Calendario demo de encuentros guardados y disponibles.</p>
+            <p class="page-sub">Calendario de encuentros guardados y disponibles.</p>
           </div>
           <div class="matches-grid" id="matchesGrid"></div>
         </section>
@@ -455,7 +455,7 @@
         <section class="screen" id="screen-expenses" data-title="Gastos">
           <div class="page-header">
             <h1 class="page-title">Gastos</h1>
-            <p class="page-sub">Control de presupuesto mock por categorias y transacciones.</p>
+            <p class="page-sub">Control de presupuesto por categorías y transacciones.</p>
           </div>
           <div class="expense-hero">
             <div class="expense-hero-top">
@@ -479,7 +479,7 @@
         <section class="screen" id="screen-recommendations" data-title="Recomendaciones">
           <div class="page-header">
             <h1 class="page-title">Recomendaciones</h1>
-            <p class="page-sub">Lugares mock seleccionados para comer, descansar y moverse mejor.</p>
+            <p class="page-sub">Lugares seleccionados para comer, descansar y moverse mejor.</p>
           </div>
           <div class="tabs" role="tablist">
             <button class="tab-btn active" type="button" data-rec-tab="food"><i data-lucide="utensils"></i>Comida</button>
@@ -495,13 +495,13 @@
             <h1 class="premium-hero-title">Viaja como si tuvieras un equipo contigo.</h1>
             <p class="premium-hero-sub">AI contextual, alertas proactivas, concierge y rutas optimizadas.</p>
             <div class="premium-price"><span class="premium-price-big">$19</span><sub>/mes</sub></div>
-            <div class="premium-price-sub">Demo visual sin pagos reales</div>
+            <div class="premium-price-sub">Sin cargos por ahora</div>
           </div>
           <div class="premium-features">
             <article class="pf-card"><div class="pf-icon"><i data-lucide="bot"></i></div><div class="pf-body"><h3 class="pf-title">Travel AI ilimitado</h3><p class="pf-desc">Respuestas con contexto de agenda, clima, seguridad y gasto.</p></div></article>
             <article class="pf-card"><div class="pf-icon"><i data-lucide="bell-ring"></i></div><div class="pf-body"><h3 class="pf-title">Alertas premium</h3><p class="pf-desc">Cambios de clima, retrasos, trafico y zonas de alta afluencia.</p></div></article>
             <article class="pf-card"><div class="pf-icon"><i data-lucide="map"></i></div><div class="pf-body"><h3 class="pf-title">Mapas inteligentes</h3><p class="pf-desc">Rutas al estadio, zonas seguras y puntos guardados.</p></div></article>
-            <article class="pf-card"><div class="pf-icon"><i data-lucide="headphones"></i></div><div class="pf-body"><h3 class="pf-title">Concierge</h3><p class="pf-desc">Soporte prioritario mock para reservas y emergencias.</p></div></article>
+            <article class="pf-card"><div class="pf-icon"><i data-lucide="headphones"></i></div><div class="pf-body"><h3 class="pf-title">Concierge</h3><p class="pf-desc">Soporte prioritario para reservas y emergencias.</p></div></article>
           </div>
           <div class="premium-cta">
             <button class="btn btn-gold btn-lg" type="button"><i data-lucide="sparkles"></i>Activar Premium</button>
@@ -531,7 +531,7 @@
         <section class="screen" id="screen-settings" data-title="Configuracion">
           <div class="page-header">
             <h1 class="page-title">Configuracion</h1>
-            <p class="page-sub">Preferencias demo para notificaciones, moneda, idioma y privacidad.</p>
+            <p class="page-sub">Preferencias para notificaciones, moneda, idioma y privacidad.</p>
           </div>
           <div class="settings-section">
             <div class="settings-section-title">Notificaciones</div>

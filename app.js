@@ -3,8 +3,8 @@ const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)]
 
 const mock = {
   dashboardStats: [
-    { icon: "route", tone: "blue", value: "12", label: "dias de viaje", trend: "+4 ciudades" },
-    { icon: "ticket", tone: "cyan", value: "5", label: "partidos guardados", trend: "2 VIP" },
+    { icon: "route", tone: "blue", value: "8", label: "días de viaje", trend: "Guadalajara → CDMX" },
+    { icon: "ticket", tone: "cyan", value: "1", label: "partido confirmado", trend: "2 boletos" },
     { icon: "shield-check", tone: "green", value: "Verde", label: "riesgo actual", trend: "estable" }
   ],
   agenda: [
@@ -179,6 +179,38 @@ const mock = {
     "Donde puedo ahorrar hoy?"
   ]
 };
+
+/* ============================================================
+   TRIP — FUENTE DE LA VERDAD del viaje (definida a mano).
+   Todo (dashboard, presupuesto, contexto de la IA) sale de aquí.
+   Cambia estos valores y la app + la IA se actualizan juntas.
+   ============================================================ */
+const TRIP = {
+  traveler: "Rodrigo Ascencio",
+  homeCity: "Guadalajara",
+  dates: "20–27 de junio de 2026",
+  days: 8,
+  hostCityKey: "cdmx",
+  hostCity: "Ciudad de México",
+  hotel: "Zona Paseo de la Reforma, CDMX",
+  match: {
+    home: "México", away: "República Checa", group: "Grupo A",
+    date: "25 de junio de 2026", time: "19:00",
+    venue: "Estadio Azteca", tickets: 2
+  },
+  budget: {
+    total: 4200, used: 2840, currency: "USD",
+    categories: [
+      { name: "Hotel", amount: 1260 },
+      { name: "Vuelos", amount: 880 },
+      { name: "Comida", amount: 340 },
+      { name: "Tickets", amount: 360 }
+    ]
+  }
+};
+
+/* Contexto en vivo que se inyecta a la IA (clima real actualizado). */
+const tlLiveContext = { weather: null };
 
 function renderIcons() {
   if (window.lucide) {
@@ -391,6 +423,15 @@ async function renderWeather(cityId = "cdmx") {
     }).join("");
     $("#forecastList").innerHTML = days;
     renderIcons();
+
+    // Guarda el clima de la ciudad sede para alimentar a la IA y el panel de contexto
+    if (cityId === TRIP.hostCityKey) {
+      tlLiveContext.weather = { city: city.name, temp: Math.round(cur.temperature_2m), condition, rain: rainProb + "%" };
+      const ctxRain = document.getElementById("ctxRain");
+      if (ctxRain) ctxRain.textContent = rainProb + "%";
+      const ctxTemp = document.getElementById("ctxTemp");
+      if (ctxTemp) ctxTemp.textContent = Math.round(cur.temperature_2m) + "°";
+    }
   } catch (e) {
     $("#weatherMain").innerHTML = `<div class="weather-current"><div><span class="badge badge-orange">${city.name}</span><h2>—</h2><p>No se pudo cargar el clima real. Revisa tu conexión.</p></div><div class="weather-icon"><i data-lucide="cloud-off"></i></div></div>`;
     renderIcons();
@@ -627,7 +668,7 @@ function aiReply(question) {
     return "Plan recomendado: impermeable compacto, tenis con suela comoda y salida 25 minutos antes. Si la lluvia sube de 60%, cambia comida a una zona cubierta cerca de la ruta del estadio.";
   }
   if (q.includes("segur") || q.includes("estadio") || q.includes("ruta")) {
-    return "Ruta segura demo: hotel a metro Reforma, transbordo directo y caminata por corredor principal. Evita calles laterales despues del partido y usa el punto de reunion norte.";
+    return "Ruta segura sugerida: del hotel al metro Reforma, transbordo directo y caminata por el corredor principal. Evita calles laterales despues del partido y usa el punto de reunion norte.";
   }
   if (q.includes("presupuesto") || q.includes("ahorrar")) {
     return "Puedes ahorrar hoy usando shuttle compartido y comida casual antes del estadio. Mantendrias el gasto diario cerca de $115 y liberarias margen para Miami.";
@@ -704,17 +745,26 @@ function bindInteractions() {
 const tlChatHistory = [];
 
 function aiSystemPrompt() {
-  return [
+  const t = TRIP;
+  const remaining = t.budget.total - t.budget.used;
+  const desglose = t.budget.categories.map(c => `${c.name} $${c.amount}`).join(", ");
+  const lines = [
     "Eres Travel AI, el asistente de TRAVELIFE 2026, una app de viajes para el Mundial FIFA 2026.",
     "Respondes en español, claro y breve (máx 5 frases), con tono cercano y práctico de agente de viajes.",
-    "Contexto real del viaje del usuario:",
-    "- Viaje: 20–27 junio 2026, ruta Guadalajara → Ciudad de México.",
-    "- Partido guardado: México vs República Checa, 25 jun 19:00, Estadio Azteca (CDMX).",
-    "- Presupuesto: $4,200 USD total, ~68% usado.",
-    "- Sedes disponibles en la app: CDMX, Los Ángeles, Miami, Nueva York/NJ.",
-    "Si te preguntan por clima o rutas, recuérdales que la app tiene secciones de Clima (datos reales) y Mapa (rutas reales).",
-    "No inventes precios de boletos ni datos que no tengas; sé honesto si no sabes algo."
-  ].join("\n");
+    "DATOS REALES DEL VIAJE (esta es tu única verdad; no inventes otros datos):",
+    `- Viajero: ${t.traveler}, sale de ${t.homeCity}.`,
+    `- Fechas: ${t.dates} (${t.days} días).`,
+    `- Ciudad sede: ${t.hostCity}. Hospedaje: ${t.hotel}.`,
+    `- Partido: ${t.match.home} vs ${t.match.away} (${t.match.group}), ${t.match.date} a las ${t.match.time}, ${t.match.venue}. Boletos: ${t.match.tickets}.`,
+    `- Presupuesto: ${t.budget.total} ${t.budget.currency} en total, ${t.budget.used} usados, ${remaining} disponibles. Desglose: ${desglose}.`,
+    "- La app tiene un Mapa con la ruta real hotel→estadio (OSRM) y un Weather Center con clima real (Open-Meteo)."
+  ];
+  if (tlLiveContext.weather) {
+    const w = tlLiveContext.weather;
+    lines.push(`- CLIMA REAL AHORA en ${w.city}: ${w.temp}°, ${w.condition}, probabilidad de lluvia ${w.rain}. Usa este clima real para recomendar ropa, horarios de salida y plan B.`);
+  }
+  lines.push("Si te falta un dato (p. ej. precios de boletos que no están aquí), dilo con honestidad en vez de inventarlo.");
+  return lines.join("\n");
 }
 
 function addTypingBubble() {
@@ -1007,7 +1057,7 @@ document.addEventListener("DOMContentLoaded", boot);
     if (logout) logout.addEventListener("click", e => {
       e.preventDefault();
       navigate("landing");
-      notify("Sesion cerrada (demo).", { title: "Hasta pronto", icon: "log-out" });
+      notify("Sesion cerrada.", { title: "Hasta pronto", icon: "log-out" });
     });
 
     // Mi Viaje -> Agregar evento (modal)
@@ -1038,7 +1088,7 @@ document.addEventListener("DOMContentLoaded", boot);
     const sos = byText($("#screen-safety"), ".btn", "Emergencia");
     if (sos) sos.addEventListener("click", () => {
       navigate("safety");
-      notify("Llamando a Emergencias 911 (demo). Tus contactos rapidos estan abajo.", { title: "Modo emergencia", icon: "phone-call", tone: "danger", duration: 3600 });
+      notify("Emergencias 911. Tus contactos rapidos estan abajo.", { title: "Modo emergencia", icon: "phone-call", tone: "danger", duration: 3600 });
     });
 
     // Safety -> Subir documentos
@@ -1056,7 +1106,7 @@ document.addEventListener("DOMContentLoaded", boot);
     $$(".btn").filter(b => b.textContent.trim().toLowerCase().includes("activar premium")).forEach(btn => {
       btn.addEventListener("click", () => {
         navigate("premium");
-        notify("Premium activado en modo demo. Disfruta AI ilimitado y alertas proactivas.", { title: "TRAVELIFE Premium", icon: "crown", tone: "gold", duration: 3200 });
+        notify("Premium activado. Disfruta AI ilimitado y alertas proactivas.", { title: "TRAVELIFE Premium", icon: "crown", tone: "gold", duration: 3200 });
       });
     });
 
