@@ -65,83 +65,11 @@ const mock = {
     { icon: "building-2", name: "Embajada / consulado", value: "+52 55 0000 2026" },
     { icon: "heart-pulse", name: "Seguro medico", value: "TRV-26-4450" }
   ],
-  weather: {
-    cdmx: {
-      city: "Ciudad de Mexico",
-      temp: 23,
-      condition: "Nubes ligeras",
-      rain: "42%",
-      wind: "12 km/h",
-      uv: "Alto",
-      advice: "Lleva chamarra ligera, bloqueador y una capa compacta. La mejor ventana para salir al estadio es antes de las 17:15.",
-      forecast: [
-        ["Hoy", "23°", "Nubes", "42%"],
-        ["Jue", "25°", "Soleado", "18%"],
-        ["Vie", "22°", "Lluvia", "64%"],
-        ["Sab", "24°", "Parcial", "30%"],
-        ["Dom", "26°", "Soleado", "12%"]
-      ]
-    },
-    la: {
-      city: "Los Angeles",
-      temp: 27,
-      condition: "Soleado",
-      rain: "8%",
-      wind: "10 km/h",
-      uv: "Muy alto",
-      advice: "Prioriza hidratacion y sombra. Para fan zones al aire libre, usa lentes, gorra y bloqueador cada 2 horas.",
-      forecast: [
-        ["Hoy", "27°", "Soleado", "8%"],
-        ["Jue", "28°", "Soleado", "5%"],
-        ["Vie", "29°", "Soleado", "4%"],
-        ["Sab", "27°", "Parcial", "11%"],
-        ["Dom", "26°", "Brisa", "14%"]
-      ]
-    },
-    miami: {
-      city: "Miami",
-      temp: 30,
-      condition: "Humedo",
-      rain: "58%",
-      wind: "18 km/h",
-      uv: "Alto",
-      advice: "Planea traslados con margen por lluvia tropical. Ropa ligera, impermeable compacto y botella de agua.",
-      forecast: [
-        ["Hoy", "30°", "Humedo", "58%"],
-        ["Jue", "31°", "Tormenta", "70%"],
-        ["Vie", "30°", "Parcial", "38%"],
-        ["Sab", "32°", "Soleado", "22%"],
-        ["Dom", "31°", "Lluvia", "54%"]
-      ]
-    },
-    ny: {
-      city: "New York",
-      temp: 24,
-      condition: "Parcial",
-      rain: "24%",
-      wind: "14 km/h",
-      uv: "Medio",
-      advice: "Clima comodo para caminar. Lleva capa ligera para la noche y revisa tiempos del metro antes de salir.",
-      forecast: [
-        ["Hoy", "24°", "Parcial", "24%"],
-        ["Jue", "25°", "Soleado", "15%"],
-        ["Vie", "23°", "Nubes", "28%"],
-        ["Sab", "22°", "Lluvia", "52%"],
-        ["Dom", "25°", "Soleado", "10%"]
-      ]
-    }
-  },
   matches: [
     { group: "Grupo A", a: "Mexico", b: "República Checa", date: "25 Jun", city: "CDMX", saved: true },
     { group: "Grupo B", a: "USA", b: "Canada", date: "17 Jun", city: "Los Angeles", saved: true },
     { group: "Grupo C", a: "Brazil", b: "Japan", date: "21 Jun", city: "Miami", saved: false },
     { group: "Octavos", a: "TBD", b: "TBD", date: "29 Jun", city: "New York", saved: false }
-  ],
-  poi: [
-    { icon: "hotel", name: "Hotel Reforma", addr: "Paseo de la Reforma", tag: "12 min al metro" },
-    { icon: "ticket", name: "Estadio Azteca", addr: "Calz. de Tlalpan", tag: "Evento guardado" },
-    { icon: "utensils", name: "Mercado Gourmet", addr: "Roma Norte", tag: "Reserva sugerida" },
-    { icon: "shield-check", name: "Punto seguro", addr: "Fan Zone Norte", tag: "24h" }
   ],
   expenses: [
     { icon: "hotel", name: "Hotel", amount: 1260, color: "#1D4ED8", pct: 74 },
@@ -1301,6 +1229,7 @@ function openTripEditor() {
       { name: "traveler", label: "Viajero", value: TRIP.traveler, required: true },
       { name: "homeCity", label: "Ciudad de origen", value: TRIP.homeCity },
       { name: "hostCity", label: "Ciudad sede", type: "select", options: cityNames, value: TRIP.hostCity },
+      { name: "hotel", label: "Hospedaje", value: TRIP.hotel },
       { name: "dates", label: "Fechas del viaje", value: TRIP.dates },
       { name: "days", label: "Días de viaje", type: "number", value: TRIP.days },
       { name: "matchHome", label: "Equipo local", value: m.home },
@@ -1321,6 +1250,7 @@ function openTripEditor() {
       const key = nameToKey[d.hostCity] || TRIP.hostCityKey;
       TRIP.hostCityKey = key;
       TRIP.hostCity = HOST_CITIES[key].name;
+      TRIP.hotel = d.hotel || TRIP.hotel;
       TRIP.dates = d.dates || TRIP.dates;
       TRIP.days = Number(d.days) || TRIP.days;
       m.home = d.matchHome || m.home;
@@ -1387,18 +1317,44 @@ function applyTripToContent() {
   set("tripDesc", `Ruta ${TRIP.homeCity}–${TRIP.hostCity} con vuelo, hotel, el partido y ventanas de descanso.`);
   set("landingDays", TRIP.days);
 
-  // 3) El partido guardado de la lista = el del TRIP
+  // 3) Travel AI: panel "Contexto activo" + Reservas (Mi Viaje)
+  set("ctxCity", m.city);
+  set("ctxTime", m.time);
+  set("resvHotel", TRIP.hotel);
+  set("resvFlight", `Vuelo ${TRIP.homeCity}–${TRIP.hostCity}`);
+
+  // 4) El partido guardado de la lista = el del TRIP
   mock.matches[0] = { group: m.group, a: m.home, b: m.away, date: tripMatchDateShort(), city: m.city, saved: true };
 
-  // 4) Itinerario: el evento "partido" se llena desde TRIP
-  const matchStop = mock.itinerary.find(s => s.items.some(i => i.icon === "ticket"));
-  if (matchStop) {
-    const matchItem = matchStop.items.find(i => i.icon === "ticket");
-    if (matchItem) {
-      matchItem.title = `${m.home} vs ${m.away}`;
-      matchItem.meta = `${m.venue} · ${m.time}`;
+  // 5) Itinerario completo derivado del TRIP (fechas relativas al partido)
+  const kick = new Date(m.datetimeISO);
+  const fmt = d => d.toLocaleDateString("es-MX", { day: "numeric", month: "short" }).replace(".", "");
+  const offset = n => { const d = new Date(kick); d.setDate(d.getDate() + n); return d; };
+  mock.itinerary = [
+    {
+      day: "Llegada", date: fmt(offset(-2)), city: `${TRIP.homeCity} → ${TRIP.hostCity}`, status: "Confirmado",
+      items: [
+        { icon: "plane", title: `Vuelo ${TRIP.homeCity} → ${TRIP.hostCity}`, meta: "Salida por la mañana" },
+        { icon: "hotel", title: "Check-in del hotel", meta: TRIP.hotel },
+        { icon: "utensils", title: "Cena de bienvenida", meta: "Zona céntrica" }
+      ]
+    },
+    {
+      day: "Partido", date: fmt(kick), city: `Día de partido · ${TRIP.hostCity}`, status: "Alta prioridad",
+      items: [
+        { icon: "cloud-sun", title: "Revisión de clima", meta: "Ajusta tu ropa según el pronóstico" },
+        { icon: "ticket", title: `${m.home} vs ${m.away}`, meta: `${m.venue} · ${m.time}` },
+        { icon: "car", title: "Regreso al hotel", meta: "Punto de reunión seguro" }
+      ]
+    },
+    {
+      day: "Regreso", date: fmt(offset(2)), city: `${TRIP.hostCity} → ${TRIP.homeCity}`, status: "Pendiente check-in",
+      items: [
+        { icon: "plane-takeoff", title: `Vuelo ${TRIP.hostCity} → ${TRIP.homeCity}`, meta: "Vuelo de salida" },
+        { icon: "car", title: "Traslado al aeropuerto", meta: "Pickup desde el hotel" }
+      ]
     }
-  }
+  ];
 }
 
 function boot() {
