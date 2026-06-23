@@ -212,7 +212,30 @@ const TRIP = {
 };
 
 /* Contexto en vivo que se inyecta a la IA (clima real actualizado). */
-const tlLiveContext = { weather: null };
+const tlLiveContext = { weather: null, weatherByCity: null };
+
+/* Resumen compacto del clima real de una ciudad (para la IA) */
+async function fetchWeatherSummary(lat, lon) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
+    + `&current=temperature_2m,weather_code&daily=precipitation_probability_max&timezone=auto&forecast_days=1`;
+  const res = await fetch(url);
+  const data = await res.json();
+  const [condition] = wmoToInfo(data.current.weather_code);
+  const rain = (data.daily.precipitation_probability_max?.[0] ?? 0) + "%";
+  return { temp: Math.round(data.current.temperature_2m), condition, rain };
+}
+
+/* Carga el clima real de TODAS las sedes para que la IA conozca cualquiera */
+async function loadAllCitiesWeather() {
+  const acc = {};
+  await Promise.all(Object.keys(HOST_CITIES).map(async key => {
+    try {
+      const c = HOST_CITIES[key];
+      acc[key] = { city: c.name, ...(await fetchWeatherSummary(c.weather.lat, c.weather.lon)) };
+    } catch (e) { /* ignora la ciudad que falle */ }
+  }));
+  if (Object.keys(acc).length) tlLiveContext.weatherByCity = acc;
+}
 
 /* ============================================================
    IDIOMA + MONEDA + PRESUPUESTO (interactivos)
@@ -292,6 +315,7 @@ const DICT_EN = {
   "Ver Mi Viaje": "View My Trip", "Planear con AI": "Plan with AI", "Abrir asistente": "Open assistant",
   "Revisar itinerario": "Review itinerary", "Agregar evento": "Add event", "Emergencia": "Emergency",
   "Subir": "Upload", "Activar Premium": "Activate Premium", "Editar": "Edit", "Limpiar": "Clear",
+  "Usar mi ubicación": "Use my location",
   "Gasto": "Expense", "Agregar al itinerario": "Add to itinerary", "Registrar gasto": "Save expense",
   "Guardar documento": "Save document", "Cancelar": "Cancel", "Guardar": "Save",
   // Títulos y subtítulos
@@ -678,6 +702,73 @@ function makeMarkerIcon(place) {
   });
 }
 
+/* notify() vive dentro del módulo de mejoras (IIFE). Wrapper seguro para usarlo aquí. */
+function tlToast(msg, opts) { if (window.TL && window.TL.notify) window.TL.notify(msg, opts); }
+
+function makeUserIcon() {
+  return L.divIcon({
+    className: "",
+    html: `<div class="tl-marker user"><i data-lucide="navigation"></i></div>`,
+    iconSize: [34, 34], iconAnchor: [17, 34], popupAnchor: [0, -32]
+  });
+}
+
+/* Distancia en línea recta (km) entre dos coordenadas [lat, lon] */
+function haversineKm(a, b) {
+  const R = 6371, toRad = d => d * Math.PI / 180;
+  const dLat = toRad(b[0] - a[0]), dLon = toRad(b[1] - a[1]);
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a[0])) * Math.cos(toRad(b[0])) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.asin(Math.sqrt(s));
+}
+
+let tlUserMarker = null;
+let tlUserRoute = null;
+
+/* Geolocalización REAL: ubica al usuario y traza la ruta a su estadio */
+function locateUser() {
+  if (!navigator.geolocation) {
+    tlToast("Tu navegador no soporta geolocalización.", { icon: "map-pin", tone: "danger" });
+    return;
+  }
+  tlToast("Obteniendo tu ubicación…", { icon: "locate", duration: 1600 });
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const me = [pos.coords.latitude, pos.coords.longitude];
+    if (!tlMap) renderMap(tlCurrentCity);
+    const banner = $("#mapRouteInfo");
+
+    if (tlUserMarker) tlLayers.removeLayer(tlUserMarker);
+    tlUserMarker = L.marker(me, { icon: makeUserIcon() }).addTo(tlLayers)
+      .bindPopup("<strong>Estás aquí</strong>").openPopup();
+    renderIcons();
+
+    const city = HOST_CITIES[tlCurrentCity];
+    const stadium = city.places.find(p => p.type === "stadium");
+    const straight = haversineKm(me, stadium.coord).toFixed(0);
+
+    try {
+      const url = `https://router.project-osrm.org/route/v1/driving/${me[1]},${me[0]};${stadium.coord[1]},${stadium.coord[0]}?overview=full&geometries=geojson`;
+      const res = await fetch(url);
+      const data = await res.json();
+      const route = data.routes && data.routes[0];
+      if (!route) throw new Error("sin ruta");
+      const line = route.geometry.coordinates.map(c => [c[1], c[0]]);
+      if (tlUserRoute) tlLayers.removeLayer(tlUserRoute);
+      tlUserRoute = L.polyline(line, { color: "#7C3AED", weight: 5, opacity: 0.9 }).addTo(tlLayers);
+      const km = (route.distance / 1000).toFixed(1);
+      const min = Math.round(route.duration / 60);
+      if (banner) banner.innerHTML = `<strong>Tú → ${stadium.name}</strong> · <b>${km} km</b> · ~<b>${min} min</b> en auto (desde tu ubicación real)`;
+      tlMap.fitBounds(tlUserRoute.getBounds().pad(0.2));
+    } catch (e) {
+      if (banner) banner.innerHTML = `<strong>Tú → ${stadium.name}</strong> · ~<b>${straight} km</b> en línea recta.`;
+      tlMap.setView(me, 11);
+    }
+    tlToast(`Estás a ~${straight} km del ${stadium.name}.`, { title: "Ubicación lista", icon: "map-pin", duration: 2800 });
+  }, err => {
+    const msg = err.code === 1 ? "Permiso de ubicación denegado. Actívalo para usar esta función." : "No se pudo obtener tu ubicación.";
+    tlToast(msg, { icon: "map-pin", tone: "danger", duration: 3000 });
+  }, { enableHighAccuracy: true, timeout: 10000 });
+}
+
 async function drawRealRoute(from, to, stadiumName) {
   const banner = $("#mapRouteInfo");
   const url = `https://router.project-osrm.org/route/v1/driving/${from.coord[1]},${from.coord[0]};${to.coord[1]},${to.coord[0]}?overview=full&geometries=geojson`;
@@ -888,6 +979,9 @@ function bindInteractions() {
 
   $("#weatherCitySelect").addEventListener("change", event => renderWeather(event.target.value));
 
+  const locBtn = $("#useLocationBtn");
+  if (locBtn) locBtn.addEventListener("click", locateUser);
+
   $$(".tab-btn").forEach(tab => {
     tab.addEventListener("click", () => {
       $$(".tab-btn").forEach(item => item.classList.remove("active"));
@@ -919,9 +1013,13 @@ function aiSystemPrompt() {
     `- Presupuesto: ${t.budget.total} ${t.budget.currency} en total, ${t.budget.used} usados, ${remaining} disponibles. Desglose: ${desglose}.`,
     "- La app tiene un Mapa con la ruta real hotel→estadio (OSRM) y un Weather Center con clima real (Open-Meteo)."
   ];
-  if (tlLiveContext.weather) {
+  if (tlLiveContext.weatherByCity) {
+    const rows = Object.values(tlLiveContext.weatherByCity)
+      .map(w => `${w.city}: ${w.temp}°, ${w.condition}, lluvia ${w.rain}`);
+    lines.push("- CLIMA REAL AHORA en las sedes (úsalo para recomendar ropa, horarios y plan B; si preguntan por otra ciudad, usa su dato): " + rows.join(" | ") + ".");
+  } else if (tlLiveContext.weather) {
     const w = tlLiveContext.weather;
-    lines.push(`- CLIMA REAL AHORA en ${w.city}: ${w.temp}°, ${w.condition}, probabilidad de lluvia ${w.rain}. Usa este clima real para recomendar ropa, horarios de salida y plan B.`);
+    lines.push(`- CLIMA REAL AHORA en ${w.city}: ${w.temp}°, ${w.condition}, probabilidad de lluvia ${w.rain}.`);
   }
   lines.push("Si te falta un dato (p. ej. precios de boletos que no están aquí), dilo con honestidad en vez de inventarlo.");
   return lines.join("\n");
@@ -1069,6 +1167,9 @@ function boot() {
   applyLanguage("es");
   updatePremiumPrice();
   loadExchangeRate();
+
+  // Clima real de TODAS las sedes para que la IA conozca cualquiera
+  loadAllCitiesWeather();
 }
 
 document.addEventListener("DOMContentLoaded", boot);
