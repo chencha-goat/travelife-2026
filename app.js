@@ -974,6 +974,7 @@ function bindInteractions() {
       mock.checklist[index].done = !mock.checklist[index].done;
       renderTrip();
       renderIcons();
+      saveData();
     }
 
     const matchSave = event.target.closest("[data-match-index]");
@@ -982,6 +983,7 @@ function bindInteractions() {
       mock.matches[index].saved = !mock.matches[index].saved;
       renderMatches();
       renderIcons();
+      saveData();
     }
 
     const recSave = event.target.closest(".rec-save-btn");
@@ -1239,6 +1241,122 @@ function initProfile() {
   });
 }
 
+/* ============================================================
+   MEMORIA (localStorage): guarda preferencias, datos y viaje
+   ============================================================ */
+function savePrefs() {
+  try { localStorage.setItem("tl_prefs", JSON.stringify({ lang: tlLang, currency: tlCurrency })); } catch (e) { /* ignora */ }
+}
+function loadPrefs() {
+  try {
+    const r = localStorage.getItem("tl_prefs");
+    if (r) { const p = JSON.parse(r); if (p.lang) tlLang = p.lang; if (p.currency) tlCurrency = p.currency; }
+  } catch (e) { /* ignora */ }
+}
+
+function saveData() {
+  try {
+    localStorage.setItem("tl_data", JSON.stringify({
+      expenses: mock.expenses,
+      transactions: mock.transactions,
+      checklist: mock.checklist.map(c => c.done),
+      matchesSaved: mock.matches.map(m => m.saved)
+    }));
+  } catch (e) { /* ignora */ }
+}
+function loadData() {
+  try {
+    const raw = localStorage.getItem("tl_data");
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (Array.isArray(d.expenses)) mock.expenses = d.expenses;
+    if (Array.isArray(d.transactions)) mock.transactions = d.transactions;
+    if (Array.isArray(d.checklist)) d.checklist.forEach((v, i) => { if (mock.checklist[i]) mock.checklist[i].done = v; });
+    if (Array.isArray(d.matchesSaved)) d.matchesSaved.forEach((v, i) => { if (mock.matches[i]) mock.matches[i].saved = v; });
+  } catch (e) { /* ignora */ }
+}
+
+function saveTrip() {
+  try { localStorage.setItem("tl_trip", JSON.stringify(TRIP)); } catch (e) { /* ignora */ }
+}
+function loadTrip() {
+  try {
+    const raw = localStorage.getItem("tl_trip");
+    if (raw) Object.assign(TRIP, JSON.parse(raw));
+  } catch (e) { /* ignora */ }
+}
+
+/* Editor del viaje: cambia TRIP y actualiza TODA la app */
+function openTripEditor() {
+  if (!(window.TL && window.TL.openModal)) return;
+  const cityNames = Object.values(HOST_CITIES).map(c => c.name);
+  const nameToKey = {};
+  Object.keys(HOST_CITIES).forEach(k => { nameToKey[HOST_CITIES[k].name] = k; });
+  const m = TRIP.match;
+  const cat = name => { const c = mock.expenses.find(x => x.name === name); return c ? c.amount : ""; };
+
+  window.TL.openModal({
+    title: "Editar viaje", icon: "route", submitText: "Guardar viaje",
+    fields: [
+      { name: "traveler", label: "Viajero", value: TRIP.traveler, required: true },
+      { name: "homeCity", label: "Ciudad de origen", value: TRIP.homeCity },
+      { name: "hostCity", label: "Ciudad sede", type: "select", options: cityNames, value: TRIP.hostCity },
+      { name: "dates", label: "Fechas del viaje", value: TRIP.dates },
+      { name: "days", label: "Días de viaje", type: "number", value: TRIP.days },
+      { name: "matchHome", label: "Equipo local", value: m.home },
+      { name: "matchAway", label: "Equipo visitante", value: m.away },
+      { name: "matchGroup", label: "Grupo / fase", value: m.group },
+      { name: "matchKick", label: "Fecha y hora del partido", type: "datetime-local", value: (m.datetimeISO || "").slice(0, 16) },
+      { name: "matchVenue", label: "Estadio", value: m.venue },
+      { name: "matchTickets", label: "Boletos", type: "number", value: m.tickets },
+      { name: "budgetTotal", label: "Presupuesto total (USD)", type: "number", value: TRIP.budget.total },
+      { name: "catHotel", label: "Gasto Hotel (USD)", type: "number", value: cat("Hotel") },
+      { name: "catVuelos", label: "Gasto Vuelos (USD)", type: "number", value: cat("Vuelos") },
+      { name: "catComida", label: "Gasto Comida (USD)", type: "number", value: cat("Comida") },
+      { name: "catTickets", label: "Gasto Tickets (USD)", type: "number", value: cat("Tickets") }
+    ],
+    onSubmit: d => {
+      if (d.traveler) TRIP.traveler = d.traveler;
+      TRIP.homeCity = d.homeCity || TRIP.homeCity;
+      const key = nameToKey[d.hostCity] || TRIP.hostCityKey;
+      TRIP.hostCityKey = key;
+      TRIP.hostCity = HOST_CITIES[key].name;
+      TRIP.dates = d.dates || TRIP.dates;
+      TRIP.days = Number(d.days) || TRIP.days;
+      m.home = d.matchHome || m.home;
+      m.away = d.matchAway || m.away;
+      m.group = d.matchGroup || m.group;
+      m.venue = d.matchVenue || m.venue;
+      m.tickets = Number(d.matchTickets) || m.tickets;
+      m.city = HOST_CITIES[key].name;
+      if (d.matchKick) {
+        m.datetimeISO = d.matchKick;
+        m.date = new Date(d.matchKick).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
+        m.time = d.matchKick.slice(11, 16);
+      }
+      TRIP.budget.total = Number(d.budgetTotal) || TRIP.budget.total;
+      [["Hotel", d.catHotel], ["Vuelos", d.catVuelos], ["Comida", d.catComida], ["Tickets", d.catTickets]].forEach(([name, val]) => {
+        const c = mock.expenses.find(x => x.name === name);
+        if (c && val !== "" && val != null) c.amount = Number(val);
+      });
+      const maxCat = Math.max(...mock.expenses.map(c => c.amount), 1);
+      mock.expenses.forEach(c => { c.pct = Math.max(8, Math.round((c.amount / maxCat) * 100)); });
+
+      // Guardar y re-aplicar a TODO
+      saveTrip(); saveData();
+      tlCurrentCity = key;
+      applyTripToContent();
+      renderDashboard(); renderMatches(); renderTrip(); renderExpenses(); updateBudgetUI(); updateCountdown();
+      const ws = $("#weatherCitySelect"); if (ws) { ws.value = key; }
+      const ms = $("#mapCitySel"); if (ms) ms.value = key;
+      renderWeather(key);
+      if (tlMap) renderMap(key);
+      applyLanguage(tlLang);
+      tlToast("Viaje actualizado en toda la app.", { title: "Viaje", icon: "check-circle-2" });
+    }
+  });
+}
+
 function tripMatchDateShort() {
   try {
     return new Date(TRIP.match.datetimeISO).toLocaleDateString("es-MX", { day: "numeric", month: "short" }).replace(".", "");
@@ -1285,11 +1403,18 @@ function applyTripToContent() {
 
 function boot() {
   bindNavigation();
+
+  // MEMORIA: carga preferencias, viaje y datos guardados antes de renderizar
+  loadPrefs();
+  loadTrip();
+  tlCurrentCity = TRIP.hostCityKey;
   applyTripToContent();
+  loadData();
+
   renderDashboard();
   renderTrip();
   renderSafety();
-  renderWeather();
+  renderWeather(TRIP.hostCityKey);
   renderMatches();
   renderExpenses();
   renderRecommendations();
@@ -1298,6 +1423,12 @@ function boot() {
   updateCountdown();
   window.setInterval(updateCountdown, 1000);
 
+  // Refleja preferencias guardadas en los selectores
+  const ls = $("#langSelect"); if (ls) ls.value = tlLang;
+  const cs = $("#currencySelect"); if (cs) cs.value = tlCurrency;
+  const ws = $("#weatherCitySelect"); if (ws) ws.value = TRIP.hostCityKey;
+  const ms = $("#mapCitySel"); if (ms) ms.value = TRIP.hostCityKey;
+
   const initial = window.location.hash.replace("#", "") || "landing";
   navigate(initial, false);
   renderIcons();
@@ -1305,10 +1436,16 @@ function boot() {
   // Perfil editable (carga lo guardado y enlaza la foto)
   initProfile();
 
-  // Idioma y moneda: prepara el sistema y trae el tipo de cambio real
-  applyLanguage("es");
+  // Editor del viaje
+  const editTrip = $("#editTripBtn");
+  if (editTrip) editTrip.addEventListener("click", openTripEditor);
+
+  // Idioma guardado + moneda con tipo de cambio real
+  applyLanguage(tlLang);
   updatePremiumPrice();
-  loadExchangeRate();
+  loadExchangeRate().then(() => {
+    renderExpenses(); updateBudgetUI(); updatePremiumPrice();
+  });
 
   // Clima real de TODAS las sedes para que la IA conozca cualquiera
   loadAllCitiesWeather();
@@ -1376,7 +1513,7 @@ document.addEventListener("DOMContentLoaded", boot);
           ${fields.map(f => f.type === "select"
             ? `<label class="tl-field"><span>${f.label}</span>
                  <select name="${f.name}" class="form-input">
-                   ${f.options.map(o => `<option>${o}</option>`).join("")}
+                   ${f.options.map(o => `<option ${o === f.value ? "selected" : ""}>${o}</option>`).join("")}
                  </select></label>`
             : `<label class="tl-field"><span>${f.label}</span>
                  <input name="${f.name}" class="form-input" type="${f.type || "text"}"
@@ -1464,8 +1601,9 @@ document.addEventListener("DOMContentLoaded", boot);
     const maxCat = Math.max(...mock.expenses.map(c => c.amount), 1);
     mock.expenses.forEach(c => { c.pct = Math.max(8, Math.round((c.amount / maxCat) * 100)); });
 
-    // 4) Re-render (gastos + presupuesto del dashboard) y avisar
+    // 4) Re-render (gastos + presupuesto del dashboard), guardar y avisar
     renderExpenses();
+    saveData();
     applyLanguage(tlLang);
     const remaining = Math.max(0, TRIP.budget.total - budgetUsedUSD());
     notify(`${tr("Gasto")} ${formatMoney(amount)} · ${tr("Te quedan")} ${formatMoney(remaining)}.`, { title: tr("Gasto"), icon: "wallet-cards" });
@@ -1613,6 +1751,7 @@ document.addEventListener("DOMContentLoaded", boot);
     const langSel = $("#langSelect");
     if (langSel) langSel.addEventListener("change", e => {
       applyLanguage(e.target.value);
+      savePrefs();
       notify(e.target.value === "en" ? "Language changed to English." : "Idioma cambiado a Español.", { icon: "languages", duration: 1800 });
     });
 
@@ -1620,6 +1759,7 @@ document.addEventListener("DOMContentLoaded", boot);
     const curSel = $("#currencySelect");
     if (curSel) curSel.addEventListener("change", e => {
       setCurrency(e.target.value);
+      savePrefs();
       const msg = e.target.value === "MXN"
         ? `${tr("Moneda")}: MXN (1 USD ≈ ${tlRate.toFixed(2)} MXN).`
         : `${tr("Moneda")}: USD.`;

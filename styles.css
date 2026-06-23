@@ -2373,3 +2373,6 @@ svg { width: 1em; height: 1em; display: block; stroke-width: 2 }
 .profile-avatar-edit svg { width:14px; height:14px }
 .sidebar-avatar { background-size:cover; background-position:center }
 .sidebar-avatar.has-photo > i[data-lucide], .sidebar-avatar.has-photo > svg { display:none }
+
+/* Modal con muchos campos (editor de viaje): permitir scroll */
+.tl-modal-body { max-height:72vh; overflow-y:auto }
