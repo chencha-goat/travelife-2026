@@ -14,7 +14,7 @@
  * Ver SETUP-IA.md para el paso a paso completo.
  */
 
-const MODEL = "gemini-2.0-flash"; // gratis en la capa free de Google AI Studio
+const MODEL = "gemini-2.5-flash"; // gratis en la capa free de Google AI Studio
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
