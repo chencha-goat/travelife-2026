@@ -8,9 +8,9 @@ const mock = {
     { icon: "shield-check", tone: "green", value: "Verde", label: "riesgo actual", trend: "estable" }
   ],
   agenda: [
-    { time: "10:30", title: "Check-in hotel Reforma", meta: "Recepcion prioritaria" },
-    { time: "14:00", title: "Comida cerca de Condesa", meta: "Reserva para 2 personas" },
-    { time: "17:10", title: "Salida sugerida al estadio", meta: "Ruta con buffer de trafico" }
+    { time: "10:00", title: "Brunch en Manhattan", meta: "Reserva para 2 personas" },
+    { time: "12:00", title: "Salida a MetLife Stadium", meta: "NJ Transit desde Penn Station" },
+    { time: "14:00", title: "Llegada al estadio", meta: "Filtros y fan zone antes de la final" }
   ],
   itinerary: [
     {
@@ -61,9 +61,9 @@ const mock = {
     { level: "blue", icon: "badge-alert", title: "Documentos", meta: "Guarda copia offline de pasaporte y seguro." }
   ],
   contacts: [
-    { icon: "phone", name: "Emergencias Mexico", value: "911" },
-    { icon: "building-2", name: "Embajada / consulado", value: "+52 55 0000 2026" },
-    { icon: "heart-pulse", name: "Seguro medico", value: "TRV-26-4450" }
+    { icon: "phone", name: "Emergencias (EE.UU.)", value: "911" },
+    { icon: "building-2", name: "Consulado de México en NY", value: "+1 212 217 6400" },
+    { icon: "heart-pulse", name: "Seguro de viaje", value: "TRV-26-4450" }
   ],
   matches: [
     { group: "Grupo A", a: "Mexico", b: "República Checa", date: "25 Jun", city: "CDMX", saved: true },
@@ -72,32 +72,32 @@ const mock = {
     { group: "Octavos", a: "TBD", b: "TBD", date: "29 Jun", city: "New York", saved: false }
   ],
   expenses: [
-    { icon: "hotel", name: "Hotel", amount: 1260, color: "#1D4ED8", pct: 74 },
-    { icon: "plane", name: "Vuelos", amount: 880, color: "#06B6D4", pct: 82 },
-    { icon: "utensils", name: "Comida", amount: 340, color: "#22C55E", pct: 44 },
-    { icon: "ticket", name: "Tickets", amount: 360, color: "#F59E0B", pct: 60 }
+    { icon: "hotel", name: "Hotel", amount: 2200, color: "#1D4ED8", pct: 100 },
+    { icon: "plane", name: "Vuelos", amount: 1100, color: "#06B6D4", pct: 50 },
+    { icon: "utensils", name: "Comida", amount: 700, color: "#22C55E", pct: 32 },
+    { icon: "ticket", name: "Tickets", amount: 1400, color: "#F59E0B", pct: 64 }
   ],
   transactions: [
-    { icon: "hotel", name: "Hotel Reforma", meta: "Alojamiento · CDMX", amount: -620 },
-    { icon: "utensils", name: "Cena Polanco", meta: "Comida · Reserva", amount: -86 },
-    { icon: "ticket", name: "Upgrade asiento", meta: "Partido · VIP", amount: -140 },
-    { icon: "circle-dollar-sign", name: "Reembolso transfer", meta: "Transporte", amount: 35 }
+    { icon: "hotel", name: "Hotel Manhattan", meta: "Alojamiento · NY", amount: -980 },
+    { icon: "utensils", name: "Cena en Times Square", meta: "Comida · Reserva", amount: -120 },
+    { icon: "ticket", name: "Boleto Gran Final", meta: "Final · Categoría 1", amount: -700 },
+    { icon: "circle-dollar-sign", name: "Reembolso transfer", meta: "Transporte", amount: 40 }
   ],
   recommendations: {
     food: [
-      { icon: "utensils", name: "Contramar Express", addr: "Roma Norte", tag: "Seafood", price: "$$$" },
-      { icon: "salad", name: "Verde Match", addr: "Condesa", tag: "Ligero", price: "$$" },
-      { icon: "pizza", name: "Forza Pizza", addr: "Coyoacan", tag: "Post partido", price: "$$" }
+      { icon: "utensils", name: "Katz's Delicatessen", addr: "Lower East Side", tag: "Clásico NY", price: "$$" },
+      { icon: "pizza", name: "Joe's Pizza", addr: "Greenwich Village", tag: "Rápido", price: "$" },
+      { icon: "salad", name: "Los Tacos No.1", addr: "Chelsea Market", tag: "Antojo", price: "$" }
     ],
     coffee: [
-      { icon: "coffee", name: "Cafe Avellaneda", addr: "Coyoacan", tag: "Especialidad", price: "$$" },
-      { icon: "cup-soda", name: "Morning Lab", addr: "Reforma", tag: "Trabajo", price: "$$" },
-      { icon: "croissant", name: "Pan y Ruta", addr: "Roma", tag: "Desayuno", price: "$" }
+      { icon: "coffee", name: "Blue Bottle Coffee", addr: "Williamsburg", tag: "Especialidad", price: "$$" },
+      { icon: "cup-soda", name: "Stumptown", addr: "Midtown", tag: "Para llevar", price: "$$" },
+      { icon: "croissant", name: "Birch Coffee", addr: "Manhattan", tag: "Desayuno", price: "$" }
     ],
     transport: [
-      { icon: "train", name: "Metro + caminata", addr: "Ruta al estadio", tag: "Rapido", price: "$" },
-      { icon: "car", name: "Transfer privado", addr: "Hotel pickup", tag: "Comodo", price: "$$$" },
-      { icon: "bus", name: "Shuttle Fan Zone", addr: "Norte", tag: "Seguro", price: "$$" }
+      { icon: "train", name: "NJ Transit a Meadowlands", addr: "Desde Penn Station", tag: "Recomendado", price: "$" },
+      { icon: "car", name: "Uber / Lyft a MetLife", addr: "Pickup hotel", tag: "Cómodo", price: "$$$" },
+      { icon: "bus", name: "Coach USA shuttle", addr: "Port Authority", tag: "Directo", price: "$$" }
     ]
   },
   aiPrompts: [
@@ -116,25 +116,25 @@ const mock = {
 const TRIP = {
   traveler: "Rodrigo Ascencio",
   homeCity: "Guadalajara",
-  dates: "20–27 de junio de 2026",
-  days: 8,
-  hostCityKey: "cdmx",
-  hostCity: "Ciudad de México",
-  hotel: "Zona Paseo de la Reforma, CDMX",
+  dates: "16–21 de julio de 2026",
+  days: 6,
+  hostCityKey: "ny",
+  hostCity: "New York / NJ",
+  hotel: "Midtown Manhattan, Nueva York",
   match: {
-    home: "México", away: "República Checa", group: "Grupo A",
-    homeCode: "MX", awayCode: "CZ",
-    date: "25 de junio de 2026", time: "19:00",
-    datetimeISO: "2026-06-25T19:00:00-06:00",
-    city: "Ciudad de México", venue: "Estadio Azteca", tickets: 2
+    home: "Finalista 1", away: "Finalista 2", group: "Gran Final",
+    homeCode: "F1", awayCode: "F2",
+    date: "19 de julio de 2026", time: "15:00",
+    datetimeISO: "2026-07-19T15:00:00-04:00",
+    city: "New York / NJ", venue: "MetLife Stadium", tickets: 2
   },
   budget: {
-    total: 4200, used: 2840, currency: "USD",
+    total: 6500, used: 5400, currency: "USD",
     categories: [
-      { name: "Hotel", amount: 1260 },
-      { name: "Vuelos", amount: 880 },
-      { name: "Comida", amount: 340 },
-      { name: "Tickets", amount: 360 }
+      { name: "Hotel", amount: 2200 },
+      { name: "Vuelos", amount: 1100 },
+      { name: "Comida", amount: 700 },
+      { name: "Tickets", amount: 1400 }
     ]
   }
 };
@@ -250,7 +250,7 @@ const DICT_EN = {
   "Todo lo importante, antes de que lo necesites.": "Everything that matters, before you need it.",
   "Pregunta antes de moverte.": "Ask before you move.",
   "Travel AI Assistant": "Travel AI Assistant",
-  "Resumen ejecutivo de tu viaje de Guadalajara a Ciudad de México.": "Executive summary of your trip from Guadalajara to Mexico City.",
+  "Resumen ejecutivo de tu viaje a la Gran Final del Mundial en Nueva York.": "Executive summary of your trip to the World Cup Final in New York.",
   "Agenda de hoy": "Today's agenda", "Presupuesto del viaje": "Trip budget", "En rango": "On track",
   "Contexto activo": "Active context", "Acciones inteligentes": "Smart actions",
   "Optimizar mi dia": "Optimize my day", "Plan B por lluvia": "Rain plan B", "Revisar presupuesto": "Review budget",
@@ -852,7 +852,8 @@ function renderRecommendations(type = "food") {
 function resetChat() {
   $("#aiMessages").innerHTML = "";
   tlChatHistory.length = 0;
-  addAiMessage("assistant", "¡Hola! Soy tu Travel AI. Conozco tu viaje: CDMX, México vs República Checa el 25 jun a las 19:00 en el Estadio Azteca, y tu presupuesto. Pregúntame sobre rutas, clima, seguridad o cómo organizar tu día.");
+  const m = TRIP.match;
+  addAiMessage("assistant", `¡Hola! Soy tu Travel AI. Conozco tu viaje: ${TRIP.hostCity}, ${m.home} vs ${m.away} (${m.group}) el ${m.date} a las ${m.time} en ${m.venue}, y tu presupuesto. Pregúntame sobre rutas, clima, seguridad o cómo organizar tu día.`);
 }
 
 function addAiMessage(role, text) {
@@ -874,7 +875,7 @@ function aiReply(question) {
     return "Plan recomendado: impermeable compacto, tenis con suela comoda y salida 25 minutos antes. Si la lluvia sube de 60%, cambia comida a una zona cubierta cerca de la ruta del estadio.";
   }
   if (q.includes("segur") || q.includes("estadio") || q.includes("ruta")) {
-    return "Ruta segura sugerida: del hotel al metro Reforma, transbordo directo y caminata por el corredor principal. Evita calles laterales despues del partido y usa el punto de reunion norte.";
+    return "Ruta segura sugerida: del hotel al transporte público hacia el estadio, llega con tiempo de sobra y, al salir, sigue las rutas señalizadas y usa un punto de reunión claro.";
   }
   if (q.includes("presupuesto") || q.includes("ahorrar")) {
     return "Puedes ahorrar hoy usando shuttle compartido y comida casual antes del estadio. Mantendrias el gasto diario cerca de $115 y liberarias margen para Miami.";
@@ -1310,6 +1311,10 @@ function applyTripToContent() {
   set("mhVenue", m.venue);
   set("mhTime", m.time);
   set("mhTickets", `${m.tickets} boletos`);
+
+  // Tarjetas de estadísticas del dashboard
+  if (mock.dashboardStats[0]) { mock.dashboardStats[0].value = String(TRIP.days); mock.dashboardStats[0].trend = `${TRIP.homeCity} → ${TRIP.hostCity}`; }
+  if (mock.dashboardStats[1]) { mock.dashboardStats[1].trend = `${m.tickets} boletos`; }
 
   // 2) Encabezado del viaje + portada
   set("tripDates", TRIP.dates);
